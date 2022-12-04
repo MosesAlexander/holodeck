@@ -1,13 +1,18 @@
 extern crate glfw;
 
-use glfw::{Action, Context, Key};
+use glfw::{Action, Context, Key, WindowEvent, Window, Glfw};
+use std::sync::mpsc::Receiver;
 
 mod gl {
 	    include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
 }
 
-fn main() {
-	    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+struct Application {
+	vertex_shader_ids: Vec<gl::types::GLuint>,
+}
+
+fn init_glfw_window() -> (glfw::Glfw, Window, Receiver<(f64, WindowEvent)>) {
+		let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
 		let (mut window, events) = glfw.create_window(800, 600, "MyOpenGL", glfw::WindowMode::Windowed)
 			.expect("Failed to create GLFW window.");
@@ -28,8 +33,10 @@ fn main() {
 			gl::ClearColor(0.2, 0.3, 0.3, 1.0);
 		}
 
-		//window.
+		(glfw, window, events)
+}
 
+fn render_loop(mut glfw: Glfw, mut window: Window, events: Receiver<(f64, WindowEvent)>) {
 		while !window.should_close() {
 			unsafe {
 				gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -40,6 +47,18 @@ fn main() {
 			window.swap_buffers();
 			glfw.poll_events();
 		}
+}
+
+fn main() {
+	    let glfw;
+		let window;
+		let events;
+
+		(glfw, window, events) = init_glfw_window();
+
+		render_loop(glfw, window, events);
+
+
 }
 
 fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
