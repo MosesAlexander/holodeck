@@ -17,6 +17,9 @@ extern fn framebuffer_size_callback(window: *mut GLFWwindow, width: i32, height:
 
 pub struct Application {
     vertex_shader_ids: Vec<gl::types::GLuint>,
+    fragment_shader_ids: Vec<gl::types::GLuint>,
+    program_ids: Vec<gl::types::GLuint>,
+    prog_shader_assoc: Vec<(gl::types::GLuint, gl::types::GLuint)>,
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
@@ -62,6 +65,9 @@ impl Application {
         }
 
         Application {vertex_shader_ids: Vec::new(),
+                    fragment_shader_ids: Vec::new(),
+                    program_ids: Vec::new(),
+                    prog_shader_assoc: Vec::new(),
                     glfw: glfw,
                     window:window,
                     events: events}
@@ -69,7 +75,7 @@ impl Application {
 
     // Compiles the given shader and stores its id in the App's vector
     // In the Error case of Result the first string is our error message, the second string is the OpenGL error message
-    fn compile_shader_from_source(&mut self, source: &CStr, kind: gl::types::GLenum) -> Result<(), (String,String)> {
+    pub fn compile_shader_from_source(&mut self, source: &CStr, kind: gl::types::GLenum) -> Result<(), (String,String)> {
         self.vertex_shader_ids.push(
             unsafe{
                 gl::CreateShader(kind)
@@ -113,6 +119,21 @@ impl Application {
         Ok(())
     }
 
+    pub fn create_and_link_program_vert_frag_shaders(&mut self, vert_shader_id: u32, frag_shader_id: u32) {
+        unsafe {
+            let program_id: gl::types::GLuint = gl::CreateProgram();
+
+            gl::AttachShader(program_id, vert_shader_id);
+            gl::AttachShader(program_id, frag_shader_id);
+            gl::LinkProgram(program_id);
+
+            self.prog_shader_assoc.push((program_id,vert_shader_id));
+            self.prog_shader_assoc.push((program_id,frag_shader_id));
+
+            self.program_ids.push(program_id);
+        }
+    }
+
     pub fn render_loop(&mut self) {
             while !self.window.should_close() {
                 unsafe {
@@ -126,6 +147,25 @@ impl Application {
             }
     }
 
+}
+
+impl Drop for Application {
+    fn drop(&mut self) {
+
+        // Detach shaders from their respective associated program
+        for (program_id, shader_id) in self.prog_shader_assoc.iter() {
+            unsafe {
+                gl::DetachShader(*program_id, *shader_id);
+            }
+        }
+
+        // Delete the shaders
+        for shader_id in self.vertex_shader_ids.iter() {
+            unsafe {
+                gl::DeleteShader(*shader_id);
+            }
+        }
+    }
 }
 
 fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
