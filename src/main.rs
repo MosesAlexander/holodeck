@@ -8,7 +8,7 @@ fn main() {
 	let mut app = Application::new();
 
 	match app.compile_shader_from_source(
-		&CString::new(include_str!("/home/amo/work/rust-opengl/src/triangle.vert")).unwrap(),
+		&CString::new(include_str!("triangle.vert")).unwrap(),
 			application::VERTEX_SHADER) {
 				Ok(()) => {}
 				Err(e) => {
@@ -17,9 +17,9 @@ fn main() {
 				}
 
 			}
-			
+
 	match app.compile_shader_from_source(
-			&CString::new(include_str!("/home/amo/work/rust-opengl/src/triangle.frag")).unwrap(),
+			&CString::new(include_str!("triangle.frag")).unwrap(),
 				application::FRAGMENT_SHADER) {
 			Ok(()) => {
 
@@ -41,7 +41,16 @@ fn main() {
 						std::process::exit(1);
 					}
 				}
+
 	app.use_program_at_index(0);
+
+	let vertices: Vec<f32> = vec![
+		-0.5, -0.5, 0.0,
+		0.5, -0.5, 0.0,
+		0.0, 0.5, 0.0,
+	];
+
+	app.generate_buffers_triangle(&vertices);
 
 	app.render_loop();
 }

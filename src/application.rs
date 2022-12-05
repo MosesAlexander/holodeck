@@ -15,10 +15,12 @@ extern fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height
 	}
 }
 
+
 pub struct Application {
     pub vertex_shader_ids: Vec<gl::types::GLuint>,
     pub fragment_shader_ids: Vec<gl::types::GLuint>,
     program_ids: Vec<gl::types::GLuint>,
+    vaos: Vec<gl::types::GLuint>,
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
@@ -69,6 +71,7 @@ impl Application {
         Application {vertex_shader_ids: Vec::new(),
                     fragment_shader_ids: Vec::new(),
                     program_ids: Vec::new(),
+                    vaos: Vec::new(),
                     glfw: glfw,
                     window:window,
                     events: events}
@@ -170,6 +173,51 @@ impl Application {
             gl::UseProgram(self.program_ids[idx]);
         }
     }
+
+
+
+    pub fn generate_buffers_triangle(&mut self, vertices: &Vec<f32>) {
+        let mut vbo: gl::types::GLuint = 0;
+
+        unsafe {
+            gl::GenBuffers(1, &mut vbo);
+
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, //size of data in bytes
+                vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
+                gl::STATIC_DRAW,
+            );
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0); //unbind buffer
+        }
+
+        let mut vao: gl::types::GLuint = 0;
+        unsafe {
+            gl::GenVertexArrays(1, &mut vao);
+            gl::BindVertexArray(vao);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+
+            // specify data layout for attribute 0
+            // this is layout (location = 0) in the vertex shader
+            gl::EnableVertexAttribArray(0);
+            gl::VertexAttribPointer(
+                0, // index of the generic vertex attribute (layout (location = 0))
+                3, // the number of ocmponents per generic 
+                gl::FLOAT, // data type
+                gl::FALSE, // normalized int-to-float conversion
+                (3 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
+                std::ptr::null() // offset of the first component
+            );
+
+            // unbind vbo and vao just for correctness, this is not really needed
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+            gl::BindVertexArray(0);
+        }
+        self.vaos.push(vao);
+
+    }
+
     pub fn render_loop(&mut self) {
             while !self.window.should_close() {
                 unsafe {
@@ -178,6 +226,15 @@ impl Application {
                 for (_, event) in glfw::flush_messages(&self.events) {
                     handle_window_event(&mut self.window, event);
                 }
+                unsafe {
+                    gl::BindVertexArray(self.vaos[0]);
+                    gl::DrawArrays(
+                        gl::TRIANGLES,
+                        0, // starting index in the enabled arrays
+                        3 // number of indices to be rendered
+                    );
+                }
+
                 self.window.swap_buffers();
                 self.glfw.poll_events();
             }
