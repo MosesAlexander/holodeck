@@ -9,21 +9,23 @@ mod gl {
         include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
 }
 
-extern fn framebuffer_size_callback(window: *mut GLFWwindow, width: i32, height: i32) {
+extern fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height: i32) {
 	unsafe {
 		gl::Viewport(0,0,width,height);
 	}
 }
 
 pub struct Application {
-    vertex_shader_ids: Vec<gl::types::GLuint>,
-    fragment_shader_ids: Vec<gl::types::GLuint>,
+    pub vertex_shader_ids: Vec<gl::types::GLuint>,
+    pub fragment_shader_ids: Vec<gl::types::GLuint>,
     program_ids: Vec<gl::types::GLuint>,
-    prog_shader_assoc: Vec<(gl::types::GLuint, gl::types::GLuint)>,
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
 }
+
+pub const VERTEX_SHADER: gl::types::GLenum = gl::VERTEX_SHADER;
+pub const FRAGMENT_SHADER: gl::types::GLenum = gl::FRAGMENT_SHADER;
 
 fn create_whitespace_cstring_with_len(len: usize) -> CString {
     // allocate buffer of correct size
@@ -67,7 +69,6 @@ impl Application {
         Application {vertex_shader_ids: Vec::new(),
                     fragment_shader_ids: Vec::new(),
                     program_ids: Vec::new(),
-                    prog_shader_assoc: Vec::new(),
                     glfw: glfw,
                     window:window,
                     events: events}
@@ -75,65 +76,100 @@ impl Application {
 
     // Compiles the given shader and stores its id in the App's vector
     // In the Error case of Result the first string is our error message, the second string is the OpenGL error message
-    pub fn compile_shader_from_source(&mut self, source: &CStr, kind: gl::types::GLenum) -> Result<(), (String,String)> {
-        self.vertex_shader_ids.push(
-            unsafe{
+    pub fn compile_shader_from_source(&mut self, source: &CStr, kind: gl::types::GLenum) -> Result<(), String> {
+        let shader_ids: &mut Vec<gl::types::GLuint>;
+        if kind == VERTEX_SHADER {
+            shader_ids = &mut self.vertex_shader_ids;
+        } else if kind == FRAGMENT_SHADER {
+            shader_ids = &mut self.fragment_shader_ids;
+        } else {
+            return Err("Invalid shader type!".to_string());
+        }
+
+        shader_ids.push(
+            unsafe {
                 gl::CreateShader(kind)
             });
+
         let mut success: gl::types::GLint = 1;
 
         unsafe {
-            gl::ShaderSource(*self.vertex_shader_ids.last().unwrap(),
+            gl::ShaderSource(*shader_ids.last().unwrap(),
                                 1, 
                                 &source.as_ptr(),
                                 std::ptr::null());
             
-            gl::CompileShader(*self.vertex_shader_ids.last().unwrap());
+            gl::CompileShader(*shader_ids.last().unwrap());
             
-            gl::GetShaderiv(*self.vertex_shader_ids.last().unwrap(),
+            gl::GetShaderiv(*shader_ids.last().unwrap(),
                                     gl::COMPILE_STATUS,
                                     &mut success);
         }
 
         if success == 0 {
-            let error_string = "Failed to compile vertex shader".to_string();
             let mut len: gl::types::GLint = 0;
             unsafe {
-                gl::GetShaderiv(*self.vertex_shader_ids.last().unwrap(),
+                gl::GetShaderiv(*shader_ids.last().unwrap(),
                                 gl::INFO_LOG_LENGTH, &mut len);
             }
             let error = create_whitespace_cstring_with_len(len as usize);
 
             // Write shader log into error
             unsafe {
-                gl::GetShaderInfoLog(*self.vertex_shader_ids.last().unwrap(), 
+                gl::GetShaderInfoLog(*shader_ids.last().unwrap(), 
                                     len,
                                     std::ptr::null_mut(),
                                     error.as_ptr() as *mut gl::types::GLchar);
             }
 
-            return Err((error_string,
-                        error.to_string_lossy().into_owned()));
+            return Err(error.to_string_lossy().into_owned());
         }
 
         Ok(())
     }
 
-    pub fn create_and_link_program_vert_frag_shaders(&mut self, vert_shader_id: u32, frag_shader_id: u32) {
+    pub fn create_and_link_program_vert_frag_shaders(&mut self, vert_shader_id: u32, frag_shader_id: u32) -> Result<(),String> {
         unsafe {
             let program_id: gl::types::GLuint = gl::CreateProgram();
+            let mut len: gl::types::GLint = 0;
 
             gl::AttachShader(program_id, vert_shader_id);
             gl::AttachShader(program_id, frag_shader_id);
             gl::LinkProgram(program_id);
 
-            self.prog_shader_assoc.push((program_id,vert_shader_id));
-            self.prog_shader_assoc.push((program_id,frag_shader_id));
+
+            let mut success: gl::types::GLint = 1;
+            gl::GetProgramiv(program_id, gl::LINK_STATUS, &mut success);
+
+            if success == 0 {
+                gl::GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len);
+
+                let error = create_whitespace_cstring_with_len(len as usize);
+
+                gl::GetProgramInfoLog(
+                    program_id,
+                    len,
+                    std::ptr::null_mut(),
+                    error.as_ptr() as *mut gl::types::GLchar
+                );
+
+                return Err(error.to_string_lossy().into_owned());
+            }
+
+            gl::DetachShader(program_id, vert_shader_id);
+            gl::DetachShader(program_id, frag_shader_id);
 
             self.program_ids.push(program_id);
         }
+
+        Ok(())
     }
 
+    pub fn use_program_at_index(&self, idx: usize) {
+        unsafe {
+            gl::UseProgram(self.program_ids[idx]);
+        }
+    }
     pub fn render_loop(&mut self) {
             while !self.window.should_close() {
                 unsafe {
@@ -151,20 +187,25 @@ impl Application {
 
 impl Drop for Application {
     fn drop(&mut self) {
-
-        // Detach shaders from their respective associated program
-        for (program_id, shader_id) in self.prog_shader_assoc.iter() {
-            unsafe {
-                gl::DetachShader(*program_id, *shader_id);
-            }
-        }
-
         // Delete the shaders
         for shader_id in self.vertex_shader_ids.iter() {
             unsafe {
                 gl::DeleteShader(*shader_id);
             }
         }
+
+        for shader_id in self.fragment_shader_ids.iter() {
+            unsafe {
+                gl::DeleteShader(*shader_id);
+            }
+        }
+
+        for program in self.program_ids.iter() {
+            unsafe {
+                gl::DeleteProgram(*program);
+            }
+        }
+
     }
 }
 
