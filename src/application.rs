@@ -218,6 +218,82 @@ impl Application {
 
     }
 
+    pub fn generate_indexed_triangles(&mut self, vertices: &Vec<f32>,
+                                   indexes_two_triangles: &Vec<u32>,
+                                   vertices_third_triangle: &Vec<f32>,
+                                   indexes_third_triangle: &Vec<u32>) {
+        let mut vao: gl::types::GLuint = 0;
+        let mut vbo: gl::types::GLuint = 0;
+        let mut ebo: gl::types::GLuint = 0;
+        let mut vao2: gl::types::GLuint = 0;
+        let mut vbo2: gl::types::GLuint = 0;
+        let mut ebo2: gl::types::GLuint = 0;
+
+        unsafe {
+            gl::GenVertexArrays(1, &mut vao);
+            gl::BindVertexArray(vao);
+            
+            gl::GenBuffers(1, &mut vbo);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                vertices.as_ptr() as *const gl::types::GLvoid,
+                gl::STATIC_DRAW
+            );
+
+            gl::GenBuffers(1, &mut ebo);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+
+            gl::BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (indexes_two_triangles.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
+                indexes_two_triangles.as_ptr() as *const gl::types::GLvoid,
+                gl::STATIC_DRAW,
+            );
+            
+            gl::VertexAttribPointer(0, 3, 
+                gl::FLOAT,
+                gl::FALSE,
+                (3 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                std::ptr::null()
+            );
+            gl::EnableVertexAttribArray(0);
+
+            gl::GenVertexArrays(1, &mut vao2);
+            gl::BindVertexArray(vao2);
+            
+            gl::GenBuffers(1, &mut vbo2);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo2);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (vertices_third_triangle.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                vertices_third_triangle.as_ptr() as *const gl::types::GLvoid,
+                gl::STATIC_DRAW
+            );
+
+            gl::GenBuffers(1, &mut ebo2);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo2);
+
+            gl::BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (indexes_third_triangle.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
+                indexes_third_triangle.as_ptr() as *const gl::types::GLvoid,
+                gl::STATIC_DRAW,
+            );
+            
+            gl::VertexAttribPointer(0, 3,
+                gl::FLOAT, 
+                gl::FALSE, 
+                (3 * std::mem::size_of::<f32>()) as gl::types::GLint, 
+                std::ptr::null());
+            gl::EnableVertexAttribArray(0);
+        }
+
+        self.vaos.push(vao);
+        self.vaos.push(vao2);
+    }
+
     pub fn render_loop(&mut self) {
             while !self.window.should_close() {
                 unsafe {
@@ -227,12 +303,20 @@ impl Application {
                     handle_window_event(&mut self.window, event);
                 }
                 unsafe {
+                    /* 
                     gl::BindVertexArray(self.vaos[0]);
                     gl::DrawArrays(
                         gl::TRIANGLES,
                         0, // starting index in the enabled arrays
                         3 // number of indices to be rendered
                     );
+                    */
+                    gl::BindVertexArray(self.vaos[0]);
+                    gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
+                    gl::BindVertexArray(0);
+                    gl::BindVertexArray(self.vaos[1]);
+                    gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null());
+                    gl::BindVertexArray(0);
                 }
 
                 self.window.swap_buffers();
@@ -290,6 +374,16 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
 		glfw::WindowEvent::Key(Key::Down, _, Action::Press, _ ) => {
 			unsafe {
 				gl::ClearColor(0.2,0.2,0.2,1.0);
+			}
+		}
+		glfw::WindowEvent::Key(Key::W, _, Action::Press, _ ) => {
+			unsafe {
+                gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+			}
+		}
+		glfw::WindowEvent::Key(Key::F, _, Action::Press, _ ) => {
+			unsafe {
+                gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL)
 			}
 		}
 		_ => {}
