@@ -311,9 +311,11 @@ impl Application {
                         3 // number of indices to be rendered
                     );
                     */
+                    self.use_program_at_index(0);
                     gl::BindVertexArray(self.vaos[0]);
                     gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
+                    self.use_program_at_index(1);
                     gl::BindVertexArray(self.vaos[1]);
                     gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
