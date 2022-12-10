@@ -19,7 +19,7 @@ fn main() {
 			}
 
 	match app.compile_shader_from_source(
-			&CString::new(include_str!("triangle.frag")).unwrap(),
+			&CString::new(include_str!("triangle3.frag")).unwrap(),
 				application::FRAGMENT_SHADER) {
 			Ok(()) => {
 
@@ -31,7 +31,7 @@ fn main() {
 	}
 
 	match app.compile_shader_from_source(
-		&CString::new(include_str!("triangle2.frag")).unwrap(),
+		&CString::new(include_str!("triangle3.frag")).unwrap(),
 		application::FRAGMENT_SHADER) {
 			Ok(()) => {
 
@@ -78,23 +78,23 @@ fn main() {
 	app.generate_buffers_triangle(&vertices); */
 
 	let vertices_indexed_two_triangles: Vec<f32> = vec![
-		0.0, 0.0, 0.0,
-		-0.5, 0.0, 0.0,
-		-0.25, 0.5, 0.0,
-		0.25, 0.5, 0.0,
-		0.5, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+		-0.5, 0.0, 0.0, 1.0, 00.0, 0.0,
+		-0.25, 0.5, 0.0, 0.0, 0.0, 1.0,
+		0.25, 0.5, 0.0, 0.0, 1.0, 0.0,
+		0.5, 0.0, 0.0, 0.0, 0.0, 1.0,
 	];
 
 	let vertices_third_triangle: Vec<f32> = vec! [
-		-0.15, 0.5, 0.0,
-		0.0, 0.75, 0.0,
-		0.15, 0.5, 0.0,
+		-0.15, 0.5, 0.0, 0.8, 0.8, 0.8,
+		0.0, 0.75, 0.0, 0.3, 0.3, 0.3,
+		0.15, 0.5, 0.0, 0.1, 0.1, 0.1,
 	];
 
 
 	let indices_two_triangles: Vec<u32> = vec! [
 		0, 1, 2,
-		0, 3, 4,
+		2, 0, 3,
 	];
 
 	let indices_third_triangle: Vec<u32> = vec! [

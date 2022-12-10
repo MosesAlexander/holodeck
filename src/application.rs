@@ -1,5 +1,6 @@
 extern crate glfw;
 
+use core::num;
 use std::ffi::{CString, CStr};
 use glfw::{Action, Context, Key, WindowEvent, Window, Glfw};
 use std::sync::mpsc::Receiver;
@@ -203,10 +204,10 @@ impl Application {
             gl::EnableVertexAttribArray(0);
             gl::VertexAttribPointer(
                 0, // index of the generic vertex attribute (layout (location = 0))
-                3, // the number of ocmponents per generic 
+                3, // the number of components per generic 
                 gl::FLOAT, // data type
                 gl::FALSE, // normalized int-to-float conversion
-                (3 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
+                (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
                 std::ptr::null() // offset of the first component
             );
 
@@ -255,10 +256,17 @@ impl Application {
             gl::VertexAttribPointer(0, 3, 
                 gl::FLOAT,
                 gl::FALSE,
-                (3 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
                 std::ptr::null()
             );
             gl::EnableVertexAttribArray(0);
+
+            gl::VertexAttribPointer(1, 3,
+            gl::FLOAT,
+            gl::FALSE,
+            (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
+            (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid);
+            gl::EnableVertexAttribArray(1);
 
             gl::GenVertexArrays(1, &mut vao2);
             gl::BindVertexArray(vao2);
@@ -285,9 +293,16 @@ impl Application {
             gl::VertexAttribPointer(0, 3,
                 gl::FLOAT, 
                 gl::FALSE, 
-                (3 * std::mem::size_of::<f32>()) as gl::types::GLint, 
+                (6 * std::mem::size_of::<f32>()) as gl::types::GLint, 
                 std::ptr::null());
             gl::EnableVertexAttribArray(0);
+
+            gl::VertexAttribPointer(1, 3,
+                    gl::FLOAT,
+                    gl::FALSE,
+                    (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                    (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid);
+            gl::EnableVertexAttribArray(1);
         }
 
         self.vaos.push(vao);
@@ -295,6 +310,51 @@ impl Application {
     }
 
     pub fn render_loop(&mut self) {
+        /* 
+            let mut uniColor: gl::types::GLint;
+            unsafe {
+                uniColor = gl::GetUniformLocation(self.program_ids[1], CString::new("triangleColor".to_string()).unwrap().as_ptr()); 
+            } */
+
+            //0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            //-0.5, 0.0, 0.0, 1.0, 00.0, 0.0,
+            //-0.25, 0.5, 0.0, 0.0, 0.0, 1.0,
+            //0.25, 0.5, 0.0, 0.0, 1.0, 0.0,
+            let mut color1: gl::types::GLint;
+            let mut color2: gl::types::GLint;
+            let mut color3: gl::types::GLint;
+            let mut color4: gl::types::GLint;
+            let mut color5: gl::types::GLint;
+            let mut color1_green = 1.0;
+            let mut color2_red = 1.0;
+            let mut color3_blue = 1.0;
+            let mut color4_green = 1.0;
+            let mut common_gradient = 1.0;
+            let mut gradient1 = 0.0;
+            let mut gradient2 = 0.5;
+            let mut gradient3 = 1.0;
+            let mut sign1 = 1.0;
+            let mut sign2 = 1.0;
+            let mut sign3 = 1.0;
+
+            unsafe {
+                color1 = gl::GetUniformLocation(self.program_ids[0], CString::new("color1".to_string()).unwrap().as_ptr());
+                color2 = gl::GetUniformLocation(self.program_ids[0], CString::new("color2".to_string()).unwrap().as_ptr());
+                color3 = gl::GetUniformLocation(self.program_ids[0], CString::new("color3".to_string()).unwrap().as_ptr());
+                color4 = gl::GetUniformLocation(self.program_ids[0], CString::new("color4".to_string()).unwrap().as_ptr());
+                color5 = gl::GetUniformLocation(self.program_ids[0], CString::new("color5".to_string()).unwrap().as_ptr());
+            }
+
+            let mut num_attributes = 0;;
+            unsafe {
+                gl::GetIntegerv(gl::MAX_VERTEX_ATTRIBS, &mut num_attributes);
+            }
+
+            println!("Number of vertex attributes: {}", num_attributes);
+            let mut component: f32 = 0.0;
+            let factor = 0.01;
+            let mut sign = 1.0;
+
             while !self.window.should_close() {
                 unsafe {
                     gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -302,6 +362,7 @@ impl Application {
                 for (_, event) in glfw::flush_messages(&self.events) {
                     handle_window_event(&mut self.window, event);
                 }
+
                 unsafe {
                     /* 
                     gl::BindVertexArray(self.vaos[0]);
@@ -313,10 +374,45 @@ impl Application {
                     */
                     self.use_program_at_index(0);
                     gl::BindVertexArray(self.vaos[0]);
+                    // grbg
+                    if gradient1 <= 0.0 || gradient1 >= 1.0 {
+                        sign1*=-1.0;
+                    }
+                    if gradient2 <= 0.0 || gradient2 >= 1.0 {
+                        sign2*=-1.0;
+                    }
+                    if gradient3 <= 0.0 || gradient3 >= 1.0 {
+                        sign3*=-1.0;
+                    }
+                    //R: g3g2g1
+                    //G: g1g3g2
+                    //B: g1g2g3
+
+                    if common_gradient <= 0.0 || common_gradient >= 1.0 {
+                        sign*=-1.0;
+                    }
+                    gradient1 = gradient1 + (0.01*sign1);
+                    gradient2 = gradient2 + (0.01*sign2);
+                    gradient3 = gradient3 + (0.01*sign3);
+                    common_gradient = common_gradient + (0.02*sign);
+                    
+                    gl::Uniform3f(color1, gradient1, gradient3, gradient2);
+                    gl::Uniform3f(color2, gradient3, gradient2, gradient1);
+                    gl::Uniform3f(color3, gradient1, gradient2, gradient3);
+                    gl::Uniform3f(color4, gradient1, gradient3, gradient2);
                     gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
                     self.use_program_at_index(1);
+                    /* 
+                    component+=factor*sign;
+                    if component >= 1.0 || component <= 0.0 {
+                        sign*=-1.0;
+                    }
+                    gl::Uniform3f(uniColor, component, component, component);
+                    */
+
                     gl::BindVertexArray(self.vaos[1]);
+                    gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
                     gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
                 }
