@@ -1,71 +1,66 @@
 mod application;
 
-use application::Application;
+use application::{Application, Shader, Program, FRAGMENT_SHADER, VERTEX_SHADER};
 use std::ffi::{CString,CStr};
 
 
 fn main() {
 	let mut app = Application::new();
 
-	match app.compile_shader_from_source(
-		&CString::new(include_str!("triangle.vert")).unwrap(),
-			application::VERTEX_SHADER) {
-				Ok(()) => {}
-				Err(e) => {
-					println!("ERROR: {}, exiting program", e);
-					std::process::exit(1);
-				}
 
-			}
+	let mut vert_shader = Shader::new(CString::new(include_str!("triangle.vert")).unwrap(),VERTEX_SHADER);
+	let mut frag_shader1 = Shader::new(CString::new(include_str!("triangle3.frag")).unwrap(),FRAGMENT_SHADER);
+	let mut frag_shader2 = Shader::new(CString::new(include_str!("triangle3.frag")).unwrap(),FRAGMENT_SHADER);
 
-	match app.compile_shader_from_source(
-			&CString::new(include_str!("triangle3.frag")).unwrap(),
-				application::FRAGMENT_SHADER) {
-			Ok(()) => {
-
-			},
-			Err(e) => {
-				println!("ERROR: {}, exiting program", e);
-				std::process::exit(1);
-			}
+	match vert_shader.compile() {
+		Ok(()) => {}
+		Err(e) => {
+			println!("ERROR: {}, exiting program", e);
+			std::process::exit(1);
+		}
 	}
 
-	match app.compile_shader_from_source(
-		&CString::new(include_str!("triangle3.frag")).unwrap(),
-		application::FRAGMENT_SHADER) {
-			Ok(()) => {
-
-			}
-			Err(e) => {
-				println!("ERROR: {}, exiting program", e);
-				std::process::exit(1);
-			}
+	match frag_shader1.compile() {
+		Ok(()) => {}
+		Err(e) => {
+			println!("ERROR: {}, exiting program", e);
+			std::process::exit(1);
 		}
+	}
 
-	match app.create_and_link_program_vert_frag_shaders(
-				app.vertex_shader_ids[0], 
-				app.fragment_shader_ids[0]) {
-					Ok(()) => {
+	match frag_shader2.compile() {
+		Ok(()) => {}
+		Err(e) => {
+			println!("ERROR: {}, exiting program", e);
+			std::process::exit(1);
+		}
+	}
 
-					},
-					Err(e) => {
-						println!("ERROR: {}, exiting program", e);
-						std::process::exit(1);
-					}
-				}
+	let mut program1 = Program::new();
+	let mut program2 = Program::new();
 
-	match app.create_and_link_program_vert_frag_shaders(
-				app.vertex_shader_ids[0], 
-				app.fragment_shader_ids[1]) {
-					Ok(()) => {
+	program1.add_shader(&vert_shader);
+	program1.add_shader(&frag_shader2);
+	match program1.link_shaders() {
+		Ok(()) => {},
+		Err(e) => {
+			println!("ERROR: {}, exiting program", e);
+			std::process::exit(1);
+		}
+	}
 
-					},
-					Err(e) => {
-						println!("ERROR: {}, exiting program", e);
-						std::process::exit(1);
-					}
-				}
+	program2.add_shader(&vert_shader);
+	program2.add_shader(&frag_shader2);
+	match program2.link_shaders() {
+		Ok(()) => {},
+		Err(e) => {
+			println!("ERROR: {}, exiting program", e);
+			std::process::exit(1);
+		}
+	}
 
+	app.add_program(&program1);
+	app.add_program(&program2);
 	//app.use_program_at_index(0);
 
 	/* 
