@@ -372,6 +372,9 @@ impl Application {
             let mut sign1 = 1.0;
             let mut sign2 = 1.0;
             let mut sign3 = 1.0;
+            let mut position_offset: gl::types::GLint;
+            let mut cur_off_x: f32 = 0.0;
+            let mut cur_off_y: f32 = 0.0;
 
             unsafe {
                 color1 = gl::GetUniformLocation(self.program_ids[0], CString::new("color1".to_string()).unwrap().as_ptr());
@@ -379,6 +382,7 @@ impl Application {
                 color3 = gl::GetUniformLocation(self.program_ids[0], CString::new("color3".to_string()).unwrap().as_ptr());
                 color4 = gl::GetUniformLocation(self.program_ids[0], CString::new("color4".to_string()).unwrap().as_ptr());
                 color5 = gl::GetUniformLocation(self.program_ids[0], CString::new("color5".to_string()).unwrap().as_ptr());
+                position_offset = gl::GetUniformLocation(self.program_ids[1], CString::new("position_offset".to_string()).unwrap().as_ptr());
             }
 
             let mut num_attributes = 0;;
@@ -396,7 +400,7 @@ impl Application {
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                 }
                 for (_, event) in glfw::flush_messages(&self.events) {
-                    handle_window_event(&mut self.window, event);
+                    handle_window_event(&mut self.window, event, &mut cur_off_x, &mut cur_off_y);
                 }
 
                 unsafe {
@@ -449,6 +453,7 @@ impl Application {
 
                     gl::BindVertexArray(self.vaos[1]);
                     gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
+                    gl::Uniform3f(position_offset, cur_off_x, cur_off_y, 0.0);
                     gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
                 }
@@ -460,31 +465,23 @@ impl Application {
 
 }
 
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
+fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, cur_off_x: &mut f32, cur_off_y: &mut f32) {
 	match event {
 		glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
 			window.set_should_close(true)
 		}
 
 		glfw::WindowEvent::Key(Key::Up, _, Action::Press, _ ) => {
-			unsafe {
-				gl::ClearColor(1.0,0.2,0.2,1.0);
-			}
+            *cur_off_y+=0.02;
 		}
 		glfw::WindowEvent::Key(Key::Left, _, Action::Press, _ ) => {
-			unsafe {
-				gl::ClearColor(0.2,0.5,1.0,1.0);
-			}
+            *cur_off_x-=0.02;
 		}
 		glfw::WindowEvent::Key(Key::Right, _, Action::Press, _ ) => {
-			unsafe {
-				gl::ClearColor(0.5,1.0,0.2,1.0);
-			}
+            *cur_off_x+=0.02;
 		}
 		glfw::WindowEvent::Key(Key::Down, _, Action::Press, _ ) => {
-			unsafe {
-				gl::ClearColor(0.2,0.2,0.2,1.0);
-			}
+            *cur_off_y-=0.02;
 		}
 		glfw::WindowEvent::Key(Key::W, _, Action::Press, _ ) => {
 			unsafe {
