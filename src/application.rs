@@ -1,10 +1,11 @@
 extern crate glfw;
 
 use core::num;
-use std::ffi::{CString, CStr};
+use std::ffi::{CString, CStr, c_int, c_void};
 use glfw::{Action, Context, Key, WindowEvent, Window, Glfw};
 use std::sync::mpsc::Receiver;
 use glfw::ffi::GLFWwindow;
+use stb_image::stb_image::bindgen::*;
 
 mod gl {
         include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -22,6 +23,7 @@ pub const FRAGMENT_SHADER: gl::types::GLenum = gl::FRAGMENT_SHADER;
 pub struct Application {
     program_ids: Vec<gl::types::GLuint>,
     vaos: Vec<gl::types::GLuint>,
+    textures: Vec<gl::types::GLuint>,
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
@@ -198,6 +200,7 @@ impl Application {
         Application {
                     program_ids: Vec::new(),
                     vaos: Vec::new(),
+                    textures: Vec::new(),
                     glfw: glfw,
                     window:window,
                     events: events}
@@ -329,42 +332,77 @@ impl Application {
             gl::VertexAttribPointer(0, 3,
                 gl::FLOAT, 
                 gl::FALSE, 
-                (6 * std::mem::size_of::<f32>()) as gl::types::GLint, 
+                (8 * std::mem::size_of::<f32>()) as gl::types::GLint, 
                 std::ptr::null());
             gl::EnableVertexAttribArray(0);
 
             gl::VertexAttribPointer(1, 3,
                     gl::FLOAT,
                     gl::FALSE,
-                    (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                    (8 * std::mem::size_of::<f32>()) as gl::types::GLint,
                     (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid);
             gl::EnableVertexAttribArray(1);
+
+            gl::VertexAttribPointer(2, 2,
+                                    gl::FLOAT,
+                                gl::FALSE,
+                                (8 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                                (6 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid);
+            gl::EnableVertexAttribArray(2);
         }
+
+        // Texture generation part
+
+        let texCoords: Vec<f32> = vec! [
+            0.0, 0.0, // lower left corner
+            1.0, 0.0, // lower right corner
+            0.5, 1.0, // top-center corner
+        ];
+
+        let mut width: c_int = 0;
+        let mut height: c_int = 0;
+        let mut nrChannels: c_int = 0;
+        let mut texture_id: gl::types::GLuint = 0;
+        let path = CString::new("src/stallman.jpg").unwrap();
+
+        unsafe {
+
+            gl::GenTextures(1, &mut texture_id);
+
+            gl::BindTexture(gl::TEXTURE_2D, texture_id);
+
+            // Set the texture wrapping/filtering options on the currently bound texture object
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+            let buffer = stbi_load(path.as_ptr(), &mut width, &mut height, &mut nrChannels, 0);
+
+            if (!buffer.is_null()) {
+                gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, width, height, 0,
+                                gl::RGB, gl::UNSIGNED_BYTE, buffer as *const c_void);
+                gl::GenerateMipmap(gl::TEXTURE_2D);
+                stbi_image_free(buffer as *mut c_void);
+            } else {
+                println!("Failed to load texture!");
+
+            }
+
+        }
+
 
         self.vaos.push(vao);
         self.vaos.push(vao2);
+        self.textures.push(texture_id);
     }
 
     pub fn render_loop(&mut self) {
-        /* 
-            let mut uniColor: gl::types::GLint;
-            unsafe {
-                uniColor = gl::GetUniformLocation(self.program_ids[1], CString::new("triangleColor".to_string()).unwrap().as_ptr()); 
-            } */
-
-            //0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-            //-0.5, 0.0, 0.0, 1.0, 00.0, 0.0,
-            //-0.25, 0.5, 0.0, 0.0, 0.0, 1.0,
-            //0.25, 0.5, 0.0, 0.0, 1.0, 0.0,
-            let mut color1: gl::types::GLint;
-            let mut color2: gl::types::GLint;
-            let mut color3: gl::types::GLint;
-            let mut color4: gl::types::GLint;
-            let mut color5: gl::types::GLint;
-            let mut color1_green = 1.0;
-            let mut color2_red = 1.0;
-            let mut color3_blue = 1.0;
-            let mut color4_green = 1.0;
+            let color1: gl::types::GLint;
+            let color2: gl::types::GLint;
+            let color3: gl::types::GLint;
+            let color4: gl::types::GLint;
+            let color5: gl::types::GLint;
             let mut common_gradient = 1.0;
             let mut gradient1 = 0.0;
             let mut gradient2 = 0.5;
@@ -372,7 +410,7 @@ impl Application {
             let mut sign1 = 1.0;
             let mut sign2 = 1.0;
             let mut sign3 = 1.0;
-            let mut position_offset: gl::types::GLint;
+            let position_offset: gl::types::GLint;
             let mut cur_off_x: f32 = 0.0;
             let mut cur_off_y: f32 = 0.0;
 
@@ -404,14 +442,6 @@ impl Application {
                 }
 
                 unsafe {
-                    /* 
-                    gl::BindVertexArray(self.vaos[0]);
-                    gl::DrawArrays(
-                        gl::TRIANGLES,
-                        0, // starting index in the enabled arrays
-                        3 // number of indices to be rendered
-                    );
-                    */
                     self.use_program_at_index(0);
                     gl::BindVertexArray(self.vaos[0]);
                     // grbg
@@ -443,18 +473,12 @@ impl Application {
                     gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
                     self.use_program_at_index(1);
-                    /* 
-                    component+=factor*sign;
-                    if component >= 1.0 || component <= 0.0 {
-                        sign*=-1.0;
-                    }
-                    gl::Uniform3f(uniColor, component, component, component);
-                    */
 
                     gl::BindVertexArray(self.vaos[1]);
+                    gl::BindTexture(gl::TEXTURE_2D, self.textures[0]);
                     //gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
                     gl::Uniform3f(position_offset, cur_off_x, cur_off_y, 0.0);
-                    gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null());
+                    gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
                 }
 
@@ -471,16 +495,16 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, cur_
 			window.set_should_close(true)
 		}
 
-		glfw::WindowEvent::Key(Key::Up, _, Action::Press, _ ) => {
+		glfw::WindowEvent::Key(Key::Up, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Up, _, Action::Press, _ )  => {
             *cur_off_y+=0.02;
 		}
-		glfw::WindowEvent::Key(Key::Left, _, Action::Press, _ ) => {
+		glfw::WindowEvent::Key(Key::Left, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Left, _, Action::Press, _ ) => {
             *cur_off_x-=0.02;
 		}
-		glfw::WindowEvent::Key(Key::Right, _, Action::Press, _ ) => {
+		glfw::WindowEvent::Key(Key::Right, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Right, _, Action::Press, _ ) => {
             *cur_off_x+=0.02;
 		}
-		glfw::WindowEvent::Key(Key::Down, _, Action::Press, _ ) => {
+		glfw::WindowEvent::Key(Key::Down, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Down, _, Action::Press, _ ) => {
             *cur_off_y-=0.02;
 		}
 		glfw::WindowEvent::Key(Key::W, _, Action::Press, _ ) => {

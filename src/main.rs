@@ -1,7 +1,7 @@
 mod application;
 
 use application::{Application, Shader, Program, FRAGMENT_SHADER, VERTEX_SHADER};
-use std::ffi::{CString,CStr};
+use std::ffi::{CString,CStr, c_int};
 
 
 fn main() {
@@ -10,7 +10,7 @@ fn main() {
 
 	let mut vert_shader = Shader::new(CString::new(include_str!("triangle.vert")).unwrap(),VERTEX_SHADER);
 	let mut frag_shader1 = Shader::new(CString::new(include_str!("triangle3.frag")).unwrap(),FRAGMENT_SHADER);
-	let mut frag_shader2 = Shader::new(CString::new(include_str!("triangle3.frag")).unwrap(),FRAGMENT_SHADER);
+	let mut frag_shader2 = Shader::new(CString::new(include_str!("triangle2.frag")).unwrap(),FRAGMENT_SHADER);
 
 	match vert_shader.compile() {
 		Ok(()) => {}
@@ -40,7 +40,7 @@ fn main() {
 	let mut program2 = Program::new();
 
 	program1.add_shader(&vert_shader);
-	program1.add_shader(&frag_shader2);
+	program1.add_shader(&frag_shader1);
 	match program1.link_shaders() {
 		Ok(()) => {},
 		Err(e) => {
@@ -81,9 +81,11 @@ fn main() {
 	];
 
 	let vertices_third_triangle: Vec<f32> = vec! [
-		-0.15, 0.75, 0.0, 0.8, 0.8, 0.8,
-		0.0, 0.5, 0.0, 0.3, 0.3, 0.3,
-		0.15, 0.75, 0.0, 0.1, 0.1, 0.1,
+		//position			//colors			//texture coords
+		-0.15, 0.60, 0.0,	0.8, 0.8, 0.8,		0.0, 0.0, // bottom left
+		-0.15, 0.90, 0.0,	0.3, 0.3, 0.3,		0.0, 1.0, // top left
+		 0.15, 0.60, 0.0,	0.1, 0.1, 0.1,		1.0, 0.0, // bottom right
+		 0.15, 0.90, 0.0,	0.5, 0.5, 0.5,		1.0, 1.0, // top right
 	];
 
 
@@ -93,14 +95,10 @@ fn main() {
 	];
 
 	let indices_third_triangle: Vec<u32> = vec! [
-		0, 1, 2,
+		0, 2, 3,
+		0, 3, 1,
 	];
 
-	let texCoords: Vec<f32> = vec! [
-		0.0, 0.0, // lower left corner
-		1.0, 0.0, // lower right corner
-		0.5, 1.0, // top-center corner
-	];
 
 	app.generate_indexed_triangles(&vertices_indexed_two_triangles,
 				&indices_two_triangles,
