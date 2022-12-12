@@ -361,15 +361,15 @@ impl Application {
 
         let mut width: c_int = 0;
         let mut height: c_int = 0;
-        let mut nrChannels: c_int = 0;
-        let mut texture_id: gl::types::GLuint = 0;
-        let path = CString::new("src/stallman.jpg").unwrap();
+        let mut nr_channels: c_int = 0;
+        let mut texture1_id: gl::types::GLuint = 0;
+        let mut path = CString::new("src/stallman.jpg").unwrap();
 
         unsafe {
 
-            gl::GenTextures(1, &mut texture_id);
+            gl::GenTextures(1, &mut texture1_id);
 
-            gl::BindTexture(gl::TEXTURE_2D, texture_id);
+            gl::BindTexture(gl::TEXTURE_2D, texture1_id);
 
             // Set the texture wrapping/filtering options on the currently bound texture object
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
@@ -377,7 +377,8 @@ impl Application {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
-            let buffer = stbi_load(path.as_ptr(), &mut width, &mut height, &mut nrChannels, 0);
+            stbi_set_flip_vertically_on_load(1);
+            let buffer = stbi_load(path.as_ptr(), &mut width, &mut height, &mut nr_channels, 0);
 
             if (!buffer.is_null()) {
                 gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, width, height, 0,
@@ -391,10 +392,42 @@ impl Application {
 
         }
 
+        let mut texture2_id: gl::types::GLuint = 0;
+        path = CString::new("src/gnu.png").unwrap();
+
+        unsafe {
+
+            gl::GenTextures(1, &mut texture2_id);
+
+            gl::BindTexture(gl::TEXTURE_2D, texture2_id);
+
+            // Set the texture wrapping/filtering options on the currently bound texture object
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+            stbi_set_flip_vertically_on_load(1);
+            let buffer = stbi_load(path.as_ptr(), &mut width, &mut height, &mut nr_channels, 0);
+
+            if (!buffer.is_null()) {
+                // use RGBA format, png supports transparency
+                gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, width, height, 0,
+                                gl::RGBA, gl::UNSIGNED_BYTE, buffer as *const c_void);
+                gl::GenerateMipmap(gl::TEXTURE_2D);
+                stbi_image_free(buffer as *mut c_void);
+            } else {
+                println!("Failed to load texture!");
+
+            }
+
+        }
+
 
         self.vaos.push(vao);
         self.vaos.push(vao2);
-        self.textures.push(texture_id);
+        self.textures.push(texture1_id);
+        self.textures.push(texture2_id);
     }
 
     pub fn render_loop(&mut self) {
@@ -413,6 +446,10 @@ impl Application {
             let position_offset: gl::types::GLint;
             let mut cur_off_x: f32 = 0.0;
             let mut cur_off_y: f32 = 0.0;
+            let mut texture1_id: gl::types::GLint = 0;
+            let mut texture2_id: gl::types::GLint = 0;
+            let mut mixvalue_id: gl::types::GLint = 0;
+            let mut mixvalue: f32 = 0.2;
 
             unsafe {
                 color1 = gl::GetUniformLocation(self.program_ids[0], CString::new("color1".to_string()).unwrap().as_ptr());
@@ -421,6 +458,9 @@ impl Application {
                 color4 = gl::GetUniformLocation(self.program_ids[0], CString::new("color4".to_string()).unwrap().as_ptr());
                 color5 = gl::GetUniformLocation(self.program_ids[0], CString::new("color5".to_string()).unwrap().as_ptr());
                 position_offset = gl::GetUniformLocation(self.program_ids[1], CString::new("position_offset".to_string()).unwrap().as_ptr());
+                texture1_id = gl::GetUniformLocation(self.program_ids[1], CString::new("texture1".to_string()).unwrap().as_ptr());
+                texture2_id = gl::GetUniformLocation(self.program_ids[1], CString::new("texture2".to_string()).unwrap().as_ptr());
+                mixvalue_id = gl::GetUniformLocation(self.program_ids[1], CString::new("mixvalue".to_string()).unwrap().as_ptr()); 
             }
 
             let mut num_attributes = 0;;
@@ -428,7 +468,7 @@ impl Application {
                 gl::GetIntegerv(gl::MAX_VERTEX_ATTRIBS, &mut num_attributes);
             }
 
-            println!("Number of vertex attributes: {}", num_attributes);
+            println!("Number of vertex attributes: {} max texture units: {}", num_attributes, gl::MAX_TEXTURE_IMAGE_UNITS);
             let mut component: f32 = 0.0;
             let factor = 0.01;
             let mut sign = 1.0;
@@ -438,7 +478,7 @@ impl Application {
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                 }
                 for (_, event) in glfw::flush_messages(&self.events) {
-                    handle_window_event(&mut self.window, event, &mut cur_off_x, &mut cur_off_y);
+                    handle_window_event(&mut self.window, event, &mut cur_off_x, &mut cur_off_y, &mut mixvalue);
                 }
 
                 unsafe {
@@ -475,8 +515,14 @@ impl Application {
                     self.use_program_at_index(1);
 
                     gl::BindVertexArray(self.vaos[1]);
+                    gl::ActiveTexture(gl::TEXTURE0);
                     gl::BindTexture(gl::TEXTURE_2D, self.textures[0]);
+                    gl::ActiveTexture(gl::TEXTURE1);
+                    gl::BindTexture(gl::TEXTURE_2D, self.textures[1]);
+                    gl::Uniform1i(texture1_id, 0);
+                    gl::Uniform1i(texture2_id, 1);
                     //gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
+                    gl::Uniform1f(mixvalue_id, mixvalue);
                     gl::Uniform3f(position_offset, cur_off_x, cur_off_y, 0.0);
                     gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
@@ -489,7 +535,7 @@ impl Application {
 
 }
 
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, cur_off_x: &mut f32, cur_off_y: &mut f32) {
+fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, cur_off_x: &mut f32, cur_off_y: &mut f32, mixvalue: &mut f32) {
 	match event {
 		glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
 			window.set_should_close(true)
@@ -506,6 +552,12 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, cur_
 		}
 		glfw::WindowEvent::Key(Key::Down, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Down, _, Action::Press, _ ) => {
             *cur_off_y-=0.02;
+		}
+        glfw::WindowEvent::Key(Key::I, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::I, _, Action::Press, _ ) => {
+            *mixvalue+=0.01;
+		}
+		glfw::WindowEvent::Key(Key::U, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::U, _, Action::Press, _ ) => {
+            *mixvalue-=0.01;
 		}
 		glfw::WindowEvent::Key(Key::W, _, Action::Press, _ ) => {
 			unsafe {
