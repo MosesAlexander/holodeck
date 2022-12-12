@@ -96,6 +96,12 @@ fn main() {
 		0, 1, 2,
 	];
 
+	let texCoords: Vec<f32> = vec! [
+		0.0, 0.0, // lower left corner
+		1.0, 0.0, // lower right corner
+		0.5, 1.0, // top-center corner
+	];
+
 	app.generate_indexed_triangles(&vertices_indexed_two_triangles,
 				&indices_two_triangles,
 				&vertices_third_triangle,

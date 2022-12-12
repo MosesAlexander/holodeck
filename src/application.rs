@@ -452,7 +452,7 @@ impl Application {
                     */
 
                     gl::BindVertexArray(self.vaos[1]);
-                    gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
+                    //gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
                     gl::Uniform3f(position_offset, cur_off_x, cur_off_y, 0.0);
                     gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);

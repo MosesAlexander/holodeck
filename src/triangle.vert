@@ -21,7 +21,7 @@ void main()
 	} else if (aPos.x == 0.25 && aPos.y == 0.5) {
 		Color = color4;
 	} else {
-		Color = color5;
+		Color = vec3(aPos.x + position_offset.x, aPos.y+position_offset.y, aPos.z);
 	}
 
 	//Color = color;
