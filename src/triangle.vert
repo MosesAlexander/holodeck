@@ -13,6 +13,9 @@ uniform vec3 position_offset;
 out vec3 Color;
 out vec2 TexCoord;
 
+uniform mat4 transform;
+uniform mat4 translate;
+
 void main()
 {
 	if (aPos.x == 0.0 && aPos.y == 0.0) {
@@ -26,6 +29,8 @@ void main()
 	} else {
 		Color = vec3(aPos.x + position_offset.x, aPos.y+position_offset.y, aPos.z);
 		TexCoord = aTexCoord;
+		gl_Position = translate * transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+		return;
 	}
 
 	//Color = color;

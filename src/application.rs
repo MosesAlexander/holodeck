@@ -6,6 +6,7 @@ use glfw::{Action, Context, Key, WindowEvent, Window, Glfw};
 use std::sync::mpsc::Receiver;
 use glfw::ffi::GLFWwindow;
 use stb_image::stb_image::bindgen::*;
+use glam::*;
 
 mod gl {
         include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -450,6 +451,15 @@ impl Application {
             let mut texture2_id: gl::types::GLint = 0;
             let mut mixvalue_id: gl::types::GLint = 0;
             let mut mixvalue: f32 = 0.2;
+            let mut transform_id: gl::types::GLint = 0;
+            let mut moving_up: bool = false;
+            let mut moving_down: bool = false;
+            let mut moving_left: bool = false;
+            let mut moving_right: bool = false;
+            let mut translate_id: gl::types::GLint = 0;
+            let mut angle_multiplier: f32 = 0.0;
+            let mut rot_cwise = false;
+            let mut rot_ccwise = false;
 
             unsafe {
                 color1 = gl::GetUniformLocation(self.program_ids[0], CString::new("color1".to_string()).unwrap().as_ptr());
@@ -461,6 +471,8 @@ impl Application {
                 texture1_id = gl::GetUniformLocation(self.program_ids[1], CString::new("texture1".to_string()).unwrap().as_ptr());
                 texture2_id = gl::GetUniformLocation(self.program_ids[1], CString::new("texture2".to_string()).unwrap().as_ptr());
                 mixvalue_id = gl::GetUniformLocation(self.program_ids[1], CString::new("mixvalue".to_string()).unwrap().as_ptr()); 
+                transform_id = gl::GetUniformLocation(self.program_ids[1], CString::new("transform".to_string()).unwrap().as_ptr()); 
+                translate_id = gl::GetUniformLocation(self.program_ids[1], CString::new("translate".to_string()).unwrap().as_ptr()); 
             }
 
             let mut num_attributes = 0;;
@@ -478,7 +490,7 @@ impl Application {
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                 }
                 for (_, event) in glfw::flush_messages(&self.events) {
-                    handle_window_event(&mut self.window, event, &mut cur_off_x, &mut cur_off_y, &mut mixvalue);
+                    handle_window_event(&mut self.window, event, &mut moving_up, &mut moving_down, &mut moving_left, &mut moving_right, &mut mixvalue, &mut rot_cwise, &mut rot_ccwise);
                 }
 
                 unsafe {
@@ -523,7 +535,32 @@ impl Application {
                     gl::Uniform1i(texture2_id, 1);
                     //gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
                     gl::Uniform1f(mixvalue_id, mixvalue);
+                    
+                    if moving_down == true {
+                        cur_off_y-=0.02;
+                    }
+                    if moving_up == true {
+                        cur_off_y+=0.02;
+                    }
+                    if moving_left == true {
+                        cur_off_x-=0.02;
+                    }
+                    if moving_right == true {
+                        cur_off_x+=0.02;
+                    }
+                    if rot_ccwise == true {
+                        angle_multiplier += 0.01;
+                    }
+                    if rot_cwise == true {
+                        angle_multiplier -= 0.01;
+                    }
+                    
+                    let transform_matrix = Mat4::from_rotation_z(std::f32::consts::PI * angle_multiplier);
+                    let translation_matrix = Mat4::from_translation(Vec3::new(cur_off_x, cur_off_y, 0.0));
+                    gl::UniformMatrix4fv(transform_id, 1, gl::FALSE, &transform_matrix.to_cols_array()[0]);
+                    gl::UniformMatrix4fv(translate_id, 1, gl::FALSE, &translation_matrix.to_cols_array()[0]);
                     gl::Uniform3f(position_offset, cur_off_x, cur_off_y, 0.0);
+
                     gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
                     gl::BindVertexArray(0);
                 }
@@ -535,24 +572,50 @@ impl Application {
 
 }
 
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, cur_off_x: &mut f32, cur_off_y: &mut f32, mixvalue: &mut f32) {
+fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, moving_up: &mut bool, moving_down: &mut bool, moving_left: &mut bool, moving_right: &mut bool, mixvalue: &mut f32, rotate_clockwise: &mut bool, rotate_counterclockwise: &mut bool) {
 	match event {
 		glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
 			window.set_should_close(true)
 		}
 
-		glfw::WindowEvent::Key(Key::Up, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Up, _, Action::Press, _ )  => {
-            *cur_off_y+=0.02;
+		glfw::WindowEvent::Key(Key::Up, _, Action::Press, _ )  => {
+            *moving_up = true;
 		}
-		glfw::WindowEvent::Key(Key::Left, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Left, _, Action::Press, _ ) => {
-            *cur_off_x-=0.02;
+		glfw::WindowEvent::Key(Key::Left, _, Action::Press, _ ) => {
+            *moving_left = true;
 		}
-		glfw::WindowEvent::Key(Key::Right, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Right, _, Action::Press, _ ) => {
-            *cur_off_x+=0.02;
+		glfw::WindowEvent::Key(Key::Right, _, Action::Press, _ ) => {
+            *moving_right = true;
 		}
-		glfw::WindowEvent::Key(Key::Down, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::Down, _, Action::Press, _ ) => {
-            *cur_off_y-=0.02;
+		glfw::WindowEvent::Key(Key::Down, _, Action::Press, _ ) => {
+            *moving_down = true;
 		}
+		glfw::WindowEvent::Key(Key::Up, _, Action::Release, _ )  => {
+            *moving_up = false;
+		}
+		glfw::WindowEvent::Key(Key::Left, _, Action::Release, _ ) => {
+            *moving_left = false;
+		}
+		glfw::WindowEvent::Key(Key::Right, _, Action::Release, _ ) => {
+            *moving_right = false;
+		}
+		glfw::WindowEvent::Key(Key::Down, _, Action::Release, _ ) => {
+            *moving_down = false;
+		}
+        glfw::WindowEvent::Key(Key::K, _, Action::Press, _ )  => {
+            *rotate_clockwise = true;
+		}
+        glfw::WindowEvent::Key(Key::K, _, Action::Release, _ )  => {
+            *rotate_clockwise = false;
+		}
+        glfw::WindowEvent::Key(Key::J, _, Action::Press, _ )  => {
+            *rotate_counterclockwise = true;
+		}
+        glfw::WindowEvent::Key(Key::J, _, Action::Release, _ )  => {
+            *rotate_counterclockwise = false;
+		}
+
+        
         glfw::WindowEvent::Key(Key::I, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::I, _, Action::Press, _ ) => {
             *mixvalue+=0.01;
 		}
