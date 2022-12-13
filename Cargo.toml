@@ -9,8 +9,8 @@ build = "build.rs"
 [dependencies]
 glfw-sys = "3.3.5"
 glfw = "*"
-#gl = "0.14.0"
 stb_image = "0.2.4"
+glam = "0.22.0"
 
 [build-dependencies]
 gl_generator = "0.14.0"
