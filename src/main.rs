@@ -1,8 +1,14 @@
-mod application;
+pub mod application;
+pub mod program;
+pub mod shader;
 
-use application::{Application, Shader, Program, FRAGMENT_SHADER, VERTEX_SHADER};
-use std::ffi::{CString,CStr, c_int};
+use application::{Application, FRAGMENT_SHADER, VERTEX_SHADER};
+use shader::Shader;
+use program::{Program};
 
+mod gl {
+        include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
+}
 
 fn main() {
 	let mut app = Application::new();

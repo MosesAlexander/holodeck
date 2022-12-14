@@ -1,16 +1,14 @@
 extern crate glfw;
 
-use core::num;
-use std::{ffi::{CString, CStr, c_int, c_void}, fs::read_to_string};
+use std::ffi::{CString, c_int, c_void};
 use glfw::{Action, Context, Key, WindowEvent, Window, Glfw};
 use std::sync::mpsc::Receiver;
 use glfw::ffi::GLFWwindow;
 use stb_image::stb_image::bindgen::*;
 use glam::*;
 
-mod gl {
-        include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
-}
+use crate::Program;
+use crate::gl;
 
 extern fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height: i32) {
 	unsafe {
@@ -28,145 +26,6 @@ pub struct Application {
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
-}
-
-pub struct Shader {
-    pub id: gl::types::GLuint,
-    pub source: CString
-}
-
-impl Shader {
-    pub fn new(source: &str, kind: gl::types::GLenum) -> Shader {
-        let source_string = CString::new(read_to_string(source).unwrap()).unwrap();
-        let mut shader_id = 0;
-        unsafe {
-            shader_id = gl::CreateShader(kind);
-        }
-
-        Shader{id:shader_id, source: source_string}
-    }
-
-    pub fn compile(&mut self) -> Result<(),String> {
-        let mut success: gl::types::GLint = 1;
-
-        unsafe {
-            gl::ShaderSource(self.id,
-                                1, 
-                                &self.source.as_ptr(),
-                                std::ptr::null());
-            
-            gl::CompileShader(self.id);
-            
-            gl::GetShaderiv(self.id,
-                                    gl::COMPILE_STATUS,
-                                    &mut success);
-        }
-
-        if success == 0 {
-            let mut len: gl::types::GLint = 0;
-            unsafe {
-                gl::GetShaderiv(self.id,
-                                gl::INFO_LOG_LENGTH, &mut len);
-            }
-            let error = create_whitespace_cstring_with_len(len as usize);
-
-            // Write shader log into error
-            unsafe {
-                gl::GetShaderInfoLog(self.id, 
-                                    len,
-                                    std::ptr::null_mut(),
-                                    error.as_ptr() as *mut gl::types::GLchar);
-            }
-
-            return Err(error.to_string_lossy().into_owned());
-        }
-
-        Ok(())
-
-    }
-}
-
-impl Drop for Shader {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteShader(self.id);
-        }
-    }
-}
-
-pub struct Program {
-    id: gl::types::GLuint,
-    shader_ids: Vec<gl::types::GLuint>,
-}
-
-impl Program {
-    pub fn new() -> Program {
-        unsafe {
-            Program { id: gl::CreateProgram(), shader_ids: Vec::new() }
-        }
-    }
-
-    pub fn add_shader(&mut self, shader: &Shader) {
-            self.shader_ids.push(shader.id);
-    }
-
-    pub fn link_shaders(&self) -> Result<(), String> {
-        for shader in self.shader_ids.iter() {
-            unsafe {
-                gl::AttachShader(self.id, *shader);
-            }
-        }
-
-        unsafe {
-            gl::LinkProgram(self.id);
-        }
-
-        let mut success: gl::types::GLint = 1;
-        unsafe {
-            gl::GetProgramiv(self.id, gl::LINK_STATUS, &mut success);
-
-            let mut len: gl::types::GLint = 0;
-            if success == 0 {
-                gl::GetProgramiv(self.id, gl::INFO_LOG_LENGTH, &mut len);
-
-                let error = create_whitespace_cstring_with_len(len as usize);
-
-                gl::GetProgramInfoLog(
-                    self.id,
-                    len,
-                    std::ptr::null_mut(),
-                    error.as_ptr() as *mut gl::types::GLchar
-                );
-
-                return Err(error.to_string_lossy().into_owned());
-            }
-        }
-
-        for shader in self.shader_ids.iter() {
-            unsafe {
-                gl::DetachShader(self.id, *shader);
-            }
-        }
-
-        Ok(())
-    }
-}
-
-impl Drop for Program {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteProgram(self.id);
-        }
-    }
-}
-
-fn create_whitespace_cstring_with_len(len: usize) -> CString {
-    // allocate buffer of correct size
-    let mut buffer: Vec<u8> = Vec::with_capacity(len+1);
-    buffer.extend([b' '].iter().cycle().take(len));
-    unsafe {
-        CString::from_vec_unchecked(buffer)
-    }
 }
 
 impl Application {
@@ -425,7 +284,7 @@ impl Application {
                 translate_id = gl::GetUniformLocation(self.program_ids[1], CString::new("translate".to_string()).unwrap().as_ptr()); 
             }
 
-            let mut num_attributes = 0;;
+            let mut num_attributes = 0;
             unsafe {
                 gl::GetIntegerv(gl::MAX_VERTEX_ATTRIBS, &mut num_attributes);
             }
