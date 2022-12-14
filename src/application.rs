@@ -1,7 +1,7 @@
 extern crate glfw;
 
 use core::num;
-use std::ffi::{CString, CStr, c_int, c_void};
+use std::{ffi::{CString, CStr, c_int, c_void}, fs::read_to_string};
 use glfw::{Action, Context, Key, WindowEvent, Window, Glfw};
 use std::sync::mpsc::Receiver;
 use glfw::ffi::GLFWwindow;
@@ -36,13 +36,14 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn new(source: CString, kind: gl::types::GLenum) -> Shader {
+    pub fn new(source: &str, kind: gl::types::GLenum) -> Shader {
+        let source_string = CString::new(read_to_string(source).unwrap()).unwrap();
         let mut shader_id = 0;
         unsafe {
             shader_id = gl::CreateShader(kind);
         }
 
-        Shader{id:shader_id, source}
+        Shader{id:shader_id, source: source_string}
     }
 
     pub fn compile(&mut self) -> Result<(),String> {

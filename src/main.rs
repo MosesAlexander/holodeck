@@ -8,9 +8,9 @@ fn main() {
 	let mut app = Application::new();
 
 
-	let mut vert_shader = Shader::new(CString::new(include_str!("triangle.vert")).unwrap(),VERTEX_SHADER);
-	let mut frag_shader1 = Shader::new(CString::new(include_str!("triangle3.frag")).unwrap(),FRAGMENT_SHADER);
-	let mut frag_shader2 = Shader::new(CString::new(include_str!("triangle2.frag")).unwrap(),FRAGMENT_SHADER);
+	let mut vert_shader = Shader::new("src/triangle.vert",VERTEX_SHADER);
+	let mut frag_shader1 = Shader::new("src/triangle3.frag",FRAGMENT_SHADER);
+	let mut frag_shader2 = Shader::new("src/triangle2.frag",FRAGMENT_SHADER);
 
 	match vert_shader.compile() {
 		Ok(()) => {}
