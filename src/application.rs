@@ -218,48 +218,6 @@ impl Application {
         }
     }
 
-    pub fn generate_buffers_triangle(&mut self, vertices: &Vec<f32>) {
-        let mut vbo: gl::types::GLuint = 0;
-
-        unsafe {
-            gl::GenBuffers(1, &mut vbo);
-
-            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
-                (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, //size of data in bytes
-                vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
-                gl::STATIC_DRAW,
-            );
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0); //unbind buffer
-        }
-
-        let mut vao: gl::types::GLuint = 0;
-        unsafe {
-            gl::GenVertexArrays(1, &mut vao);
-            gl::BindVertexArray(vao);
-            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-
-            // specify data layout for attribute 0
-            // this is layout (location = 0) in the vertex shader
-            gl::EnableVertexAttribArray(0);
-            gl::VertexAttribPointer(
-                0, // index of the generic vertex attribute (layout (location = 0))
-                3, // the number of components per generic 
-                gl::FLOAT, // data type
-                gl::FALSE, // normalized int-to-float conversion
-                (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
-                std::ptr::null() // offset of the first component
-            );
-
-            // unbind vbo and vao just for correctness, this is not really needed
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-            gl::BindVertexArray(0);
-        }
-        self.vaos.push(vao);
-
-    }
-
     pub fn generate_indexed_triangles(&mut self, vertices: &Vec<f32>,
                                    indexes_two_triangles: &Vec<u32>,
                                    vertices_third_triangle: &Vec<f32>,
@@ -354,13 +312,6 @@ impl Application {
         }
 
         // Texture generation part
-
-        let texCoords: Vec<f32> = vec! [
-            0.0, 0.0, // lower left corner
-            1.0, 0.0, // lower right corner
-            0.5, 1.0, // top-center corner
-        ];
-
         let mut width: c_int = 0;
         let mut height: c_int = 0;
         let mut nr_channels: c_int = 0;
@@ -437,7 +388,6 @@ impl Application {
             let color2: gl::types::GLint;
             let color3: gl::types::GLint;
             let color4: gl::types::GLint;
-            let color5: gl::types::GLint;
             let mut common_gradient = 1.0;
             let mut gradient1 = 0.0;
             let mut gradient2 = 0.5;
@@ -467,7 +417,6 @@ impl Application {
                 color2 = gl::GetUniformLocation(self.program_ids[0], CString::new("color2".to_string()).unwrap().as_ptr());
                 color3 = gl::GetUniformLocation(self.program_ids[0], CString::new("color3".to_string()).unwrap().as_ptr());
                 color4 = gl::GetUniformLocation(self.program_ids[0], CString::new("color4".to_string()).unwrap().as_ptr());
-                color5 = gl::GetUniformLocation(self.program_ids[0], CString::new("color5".to_string()).unwrap().as_ptr());
                 position_offset = gl::GetUniformLocation(self.program_ids[1], CString::new("position_offset".to_string()).unwrap().as_ptr());
                 texture1_id = gl::GetUniformLocation(self.program_ids[1], CString::new("texture1".to_string()).unwrap().as_ptr());
                 texture2_id = gl::GetUniformLocation(self.program_ids[1], CString::new("texture2".to_string()).unwrap().as_ptr());
@@ -481,9 +430,6 @@ impl Application {
                 gl::GetIntegerv(gl::MAX_VERTEX_ATTRIBS, &mut num_attributes);
             }
 
-            println!("Number of vertex attributes: {} max texture units: {}", num_attributes, gl::MAX_TEXTURE_IMAGE_UNITS);
-            let mut component: f32 = 0.0;
-            let factor = 0.01;
             let mut sign = 1.0;
 
             while !self.window.should_close() {
@@ -534,7 +480,6 @@ impl Application {
                     gl::BindTexture(gl::TEXTURE_2D, self.textures[1]);
                     gl::Uniform1i(texture1_id, 0);
                     gl::Uniform1i(texture2_id, 1);
-                    //gl::Uniform3f(color5, common_gradient, common_gradient, common_gradient);
                     gl::Uniform1f(mixvalue_id, mixvalue);
                     
                     if moving_down == true {

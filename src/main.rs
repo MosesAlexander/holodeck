@@ -61,16 +61,6 @@ fn main() {
 
 	app.add_program(&program1);
 	app.add_program(&program2);
-	//app.use_program_at_index(0);
-
-	/* 
-	let vertices: Vec<f32> = vec![
-		-0.5, -0.5, 0.0,
-		0.5, -0.5, 0.0,
-		0.0, 0.5, 0.0,
-	]; 
-
-	app.generate_buffers_triangle(&vertices); */
 
 	let vertices_indexed_two_triangles: Vec<f32> = vec![
 		0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
