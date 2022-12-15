@@ -1,6 +1,8 @@
 pub mod application;
 pub mod program;
 pub mod shader;
+pub mod buffer;
+pub mod vertex;
 
 use application::{Application, FRAGMENT_SHADER, VERTEX_SHADER};
 use shader::Shader;
