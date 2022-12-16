@@ -1,23 +1,25 @@
 use crate::gl;
 use crate::buffer::*;
+use crate::uniform::UniformDescriptor;
 
-struct VertexDescriptor {
+pub struct VertexDescriptor {
     buffer: BufferDescriptor,
     vao_id: gl::types::GLuint,
     ebo_id: gl::types::GLuint,
     format: gl::types::GLenum,
+    uniforms: Vec<UniformDescriptor>,
 }
 
 /*
  * component_groups: Groups of components vertices are made out of
  * component_nums:   Number of components for each group, i.e. 3 position, 3 color, 2 texture,
  */
-struct AtrributesDescriptor {
-    component_groups: gl::types::GLuint,
-    components_nums: Vec<gl::types::GLint>,
-    component_types: Vec<gl::types::GLenum>,
-    component_offsets: Vec<usize>,
-    component_strides: Vec<gl::types::GLint>,
+pub struct AtrributesDescriptor {
+    pub component_groups: gl::types::GLuint,
+    pub component_nums: Vec<gl::types::GLint>,
+    pub component_types: Vec<gl::types::GLenum>,
+    pub component_offsets: Vec<usize>,
+    pub component_strides: Vec<gl::types::GLint>,
 }
 
 impl VertexDescriptor {
@@ -28,7 +30,7 @@ impl VertexDescriptor {
             gl::GenVertexArrays(1, &mut vao_id);
             gl::GenBuffers(1, &mut ebo_id);
         }
-        let vertex_descriptor = VertexDescriptor { buffer: buffer, vao_id: vao_id, ebo_id: ebo_id, format: gl::FLOAT };
+        let vertex_descriptor = VertexDescriptor { buffer: buffer, vao_id: vao_id, ebo_id: ebo_id, format: gl::FLOAT, uniforms: Vec::new() };
         vertex_descriptor.buffer.bind();
         vertex_descriptor.bind();
         vertex_descriptor
@@ -45,7 +47,7 @@ impl VertexDescriptor {
 
         for attr_idx in 0..attributes.component_groups {
             unsafe {
-                gl::VertexAttribPointer(attr_idx, attributes.components_nums[attr_idx as usize],
+                gl::VertexAttribPointer(attr_idx, attributes.component_nums[attr_idx as usize],
                                         attributes.component_types[attr_idx as usize],
                                         gl::FALSE,
                                         match attributes.component_types[attr_idx as usize] {
@@ -74,5 +76,10 @@ impl VertexDescriptor {
             )
         }
     }
+
+    pub fn add_uniform(&mut self, uniform: UniformDescriptor) {
+        self.uniforms.push(uniform);
+    }
+
 }
 

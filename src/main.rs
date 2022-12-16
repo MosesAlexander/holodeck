@@ -3,10 +3,16 @@ pub mod program;
 pub mod shader;
 pub mod buffer;
 pub mod vertex;
+pub mod texture;
+pub mod uniform;
 
 use application::{Application, FRAGMENT_SHADER, VERTEX_SHADER};
+use buffer::BufferDescriptor;
+use vertex::{VertexDescriptor,AtrributesDescriptor};
 use shader::Shader;
 use program::{Program};
+use texture::TextureDescriptor;
+use uniform::UniformDescriptor;
 
 mod gl {
         include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -98,10 +104,36 @@ fn main() {
 	];
 
 
+	let mut buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles);
+	let mut two_triangles_vertex_desc = VertexDescriptor::new(buffer1);
+	let mut two_triangles_attr = AtrributesDescriptor {
+		component_groups: 2,
+		component_nums: vec![3, 3],
+		component_types: vec![gl::FLOAT, gl::FLOAT],
+		component_offsets: vec![0, 3],
+		component_strides: vec![0, 3],
+	};
+	match two_triangles_vertex_desc.set_attributes(two_triangles_attr) {
+		Ok(()) => {},
+		Err(e) => {
+			println!("ERROR setting attributes: {}", e);
+			std::process::exit(1);
+		}
+	}
+	two_triangles_vertex_desc.set_indexed_drawing(indices_two_triangles);
+
+	let mut buffer2 = BufferDescriptor::new(vertices_third_triangle);
+	let mut third_triangle_vert_desc = VertexDescriptor::new(buffer2);
+
+
+	let texture1_desc = TextureDescriptor::new("src/stallman.jpg");
+
+	/*
 	app.generate_indexed_triangles(&vertices_indexed_two_triangles,
 				&indices_two_triangles,
 				&vertices_third_triangle,
 				&indices_third_triangle);
+				*/
 
 	app.render_loop();
 }

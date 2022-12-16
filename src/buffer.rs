@@ -2,18 +2,16 @@ use crate::gl;
 
 pub struct BufferDescriptor {
     buffer_id: gl::types::GLuint,
-    stride: u32,
-    offset: u32,
 }
 
 impl BufferDescriptor {
-    pub fn new(vertices: Vec<f32>, stride: u32, offset: u32) -> BufferDescriptor {
+    pub fn new(vertices: Vec<f32>) -> BufferDescriptor {
         let mut buffer_id = 0;
 
         unsafe {
             gl::GenBuffers(1, &mut buffer_id);
         }
-        let buffer = BufferDescriptor { buffer_id: buffer_id, stride: stride, offset: offset };
+        let buffer = BufferDescriptor { buffer_id: buffer_id };
 
 
         buffer.bind();
