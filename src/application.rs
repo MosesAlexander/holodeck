@@ -6,9 +6,12 @@ use std::sync::mpsc::Receiver;
 use glfw::ffi::GLFWwindow;
 use stb_image::stb_image::bindgen::*;
 use glam::*;
+use crate::uniform::*;
+use crate::vertex::*;
 
 use crate::Program;
 use crate::gl;
+use crate::vertex::VertexDescriptor;
 
 extern fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height: i32) {
 	unsafe {
@@ -26,6 +29,7 @@ pub struct Application {
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
+    vertex_descriptors: Vec<VertexDescriptor>,
 }
 
 impl Application {
@@ -64,7 +68,8 @@ impl Application {
                     textures: Vec::new(),
                     glfw: glfw,
                     window:window,
-                    events: events}
+                    events: events,
+                    vertex_descriptors: Vec::new()}
     }
 
     pub fn add_program(&mut self, program: &Program) {
@@ -373,6 +378,42 @@ impl Application {
                 self.window.swap_buffers();
                 self.glfw.poll_events();
             }
+    }
+    
+    pub fn render_vaos(&mut self) {
+        let mut gradient1 = 0.0;
+        let mut gradient2 = 0.5;
+        let mut gradient3 = 1.0;
+        let mut sign1 = 1.0;
+        let mut sign2 = 1.0;
+        let mut sign3 = 1.0;
+
+        while !self.window.should_close() {
+            if gradient1 <= 0.0 || gradient1 >= 1.0 {
+                sign1*=-1.0;
+            }
+            if gradient2 <= 0.0 || gradient2 >= 1.0 {
+                sign2*=-1.0;
+            }
+            if gradient3 <= 0.0 || gradient3 >= 1.0 {
+                sign3*=-1.0;
+            }
+            //R: g3g2g1
+            //G: g1g3g2
+            //B: g1g2g3
+            gradient1 = gradient1 + (0.005*sign1);
+            gradient2 = gradient2 + (0.005*sign2);
+            gradient3 = gradient3 + (0.005*sign3);
+            
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient3,gradient2)));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient3,gradient2,gradient1)));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient2,gradient3)));
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient3,gradient2)));
+        }
+    }
+
+    pub fn add_vertex_descriptor(&mut self, descriptor: VertexDescriptor) {
+        self.vertex_descriptors.push(descriptor);
     }
 
 }

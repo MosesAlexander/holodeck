@@ -3,23 +3,24 @@ use std::ffi::{CString, c_int, c_void};
 use stb_image::stb_image::bindgen::*;
 
 pub struct TextureDescriptor {
-    texture_id: gl::types::GLuint
+    texture_id: gl::types::GLuint,
+    texture_shader_handle: gl::types::GLint,
 }
 
 impl TextureDescriptor {
-    pub fn new(path: &str) -> TextureDescriptor {
+    pub fn new(bound_program_id: gl::types::GLuint, shader_handle_name: &str, path: &str, format: gl::types::GLenum) -> TextureDescriptor {
         // Texture generation part
         let mut width: c_int = 0;
         let mut height: c_int = 0;
         let mut nr_channels: c_int = 0;
         let mut texture_id: gl::types::GLuint = 0;
         let mut path_string = CString::new(path).unwrap();
-
+        let mut texture_shader_handle = 0;
         unsafe {
-
+            texture_shader_handle = gl::GetUniformLocation(bound_program_id, CString::new(shader_handle_name.to_string()).unwrap().as_ptr());
             gl::GenTextures(1, &mut texture_id);
         }
-        let texture_desc = TextureDescriptor { texture_id: texture_id};
+        let texture_desc = TextureDescriptor { texture_id: texture_id, texture_shader_handle: texture_shader_handle};
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, texture_id);
 
@@ -34,7 +35,7 @@ impl TextureDescriptor {
 
             if (!buffer.is_null()) {
                 gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, width, height, 0,
-                                gl::RGB, gl::UNSIGNED_BYTE, buffer as *const c_void);
+                                format, gl::UNSIGNED_BYTE, buffer as *const c_void);
                 gl::GenerateMipmap(gl::TEXTURE_2D);
                 stbi_image_free(buffer as *mut c_void);
             } else {

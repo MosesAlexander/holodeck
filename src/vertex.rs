@@ -1,5 +1,6 @@
 use crate::gl;
 use crate::buffer::*;
+use crate::texture::TextureDescriptor;
 use crate::uniform::UniformDescriptor;
 
 pub struct VertexDescriptor {
@@ -7,7 +8,9 @@ pub struct VertexDescriptor {
     vao_id: gl::types::GLuint,
     ebo_id: gl::types::GLuint,
     format: gl::types::GLenum,
-    uniforms: Vec<UniformDescriptor>,
+    pub uniforms: Vec<UniformDescriptor>,
+    textures: Vec<TextureDescriptor>,
+    num_elements: gl::types::GLsizei,
 }
 
 /*
@@ -30,7 +33,15 @@ impl VertexDescriptor {
             gl::GenVertexArrays(1, &mut vao_id);
             gl::GenBuffers(1, &mut ebo_id);
         }
-        let vertex_descriptor = VertexDescriptor { buffer: buffer, vao_id: vao_id, ebo_id: ebo_id, format: gl::FLOAT, uniforms: Vec::new() };
+        let vertex_descriptor = VertexDescriptor { buffer: buffer, 
+            vao_id: vao_id, 
+            ebo_id: ebo_id, 
+            format: gl::FLOAT, 
+            uniforms: Vec::new(), 
+            textures: Vec::new(),
+            num_elements: 0,
+        };
+
         vertex_descriptor.buffer.bind();
         vertex_descriptor.bind();
         vertex_descriptor
@@ -39,6 +50,13 @@ impl VertexDescriptor {
     pub fn bind(&self) {
         unsafe {
             gl::BindVertexArray(self.vao_id);
+        }
+    }
+
+    pub fn render(&self) {
+        unsafe {
+            gl::DrawElements(gl::TRIANGLES, self.num_elements, gl::UNSIGNED_INT, std::ptr::null());
+
         }
     }
 
@@ -67,6 +85,7 @@ impl VertexDescriptor {
 
     pub fn set_indexed_drawing(&mut self, indices_array: Vec<u32>) {
         self.bind();
+        self.num_elements = indices_array.len() as i32;
         unsafe {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo_id);
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER,
@@ -79,6 +98,10 @@ impl VertexDescriptor {
 
     pub fn add_uniform(&mut self, uniform: UniformDescriptor) {
         self.uniforms.push(uniform);
+    }
+
+    pub fn add_texture(&mut self, texture: TextureDescriptor) {
+        self.textures.push(texture);
     }
 
 }

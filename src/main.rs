@@ -12,7 +12,7 @@ use vertex::{VertexDescriptor,AtrributesDescriptor};
 use shader::Shader;
 use program::{Program};
 use texture::TextureDescriptor;
-use uniform::UniformDescriptor;
+use uniform::*;
 
 mod gl {
         include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -105,7 +105,7 @@ fn main() {
 
 
 	let mut buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles);
-	let mut two_triangles_vertex_desc = VertexDescriptor::new(buffer1);
+	let mut two_triangles_vert_desc = VertexDescriptor::new(buffer1);
 	let mut two_triangles_attr = AtrributesDescriptor {
 		component_groups: 2,
 		component_nums: vec![3, 3],
@@ -113,20 +113,48 @@ fn main() {
 		component_offsets: vec![0, 3],
 		component_strides: vec![0, 3],
 	};
-	match two_triangles_vertex_desc.set_attributes(two_triangles_attr) {
+	match two_triangles_vert_desc.set_attributes(two_triangles_attr) {
 		Ok(()) => {},
 		Err(e) => {
 			println!("ERROR setting attributes: {}", e);
 			std::process::exit(1);
 		}
 	}
-	two_triangles_vertex_desc.set_indexed_drawing(indices_two_triangles);
+	two_triangles_vert_desc.set_indexed_drawing(indices_two_triangles);
+
+	let color1_uniform = UniformDescriptor::new(
+		program1.id,
+		"color1",
+	);
+	two_triangles_vert_desc.add_uniform(color1_uniform);
+
+	let color2_uniform = UniformDescriptor::new(
+		program1.id,
+		"color2",
+	);
+	two_triangles_vert_desc.add_uniform(color2_uniform);
+
+	let color3_uniform = UniformDescriptor::new(
+		program1.id,
+		"color3",
+	);
+	two_triangles_vert_desc.add_uniform(color3_uniform);
+
+	let color4_uniform = UniformDescriptor::new(
+		program1.id,
+		"color4",
+	);
+	two_triangles_vert_desc.add_uniform(color4_uniform);
 
 	let mut buffer2 = BufferDescriptor::new(vertices_third_triangle);
 	let mut third_triangle_vert_desc = VertexDescriptor::new(buffer2);
 
+	let texture1_desc = TextureDescriptor::new(program2.id, "texture1", "src/stallman.jpg", gl::RGB);
+	let texture2_desc = TextureDescriptor::new(program2.id, "texture2", "src/gnu.png", gl::RGBA);
 
-	let texture1_desc = TextureDescriptor::new("src/stallman.jpg");
+	third_triangle_vert_desc.add_texture(texture1_desc);
+	third_triangle_vert_desc.add_texture(texture2_desc);
+	third_triangle_vert_desc.set_indexed_drawing(indices_third_triangle);
 
 	/*
 	app.generate_indexed_triangles(&vertices_indexed_two_triangles,
@@ -135,6 +163,8 @@ fn main() {
 				&indices_third_triangle);
 				*/
 
+	app.add_vertex_descriptor(two_triangles_vert_desc);
+	app.add_vertex_descriptor(third_triangle_vert_desc);
 	app.render_loop();
 }
 
