@@ -289,11 +289,6 @@ impl Application {
                 translate_id = gl::GetUniformLocation(self.program_ids[1], CString::new("translate".to_string()).unwrap().as_ptr()); 
             }
 
-            let mut num_attributes = 0;
-            unsafe {
-                gl::GetIntegerv(gl::MAX_VERTEX_ATTRIBS, &mut num_attributes);
-            }
-
             let mut sign = 1.0;
 
             while !self.window.should_close() {
@@ -388,7 +383,33 @@ impl Application {
         let mut sign2 = 1.0;
         let mut sign3 = 1.0;
 
+        let position_offset: gl::types::GLint;
+        let mut cur_off_x: f32 = 0.0;
+        let mut cur_off_y: f32 = 0.0;
+        let mut texture1_id: gl::types::GLint = 0;
+        let mut texture2_id: gl::types::GLint = 0;
+        let mut mixvalue_id: gl::types::GLint = 0;
+        let mut mixvalue: f32 = 0.2;
+        let mut transform_id: gl::types::GLint = 0;
+        let mut moving_up: bool = false;
+        let mut moving_down: bool = false;
+        let mut moving_left: bool = false;
+        let mut moving_right: bool = false;
+        let mut translate_id: gl::types::GLint = 0;
+        let mut angle_multiplier: f32 = 0.0;
+        let mut rot_cwise = false;
+        let mut rot_ccwise = false;
+
+        let mut sign = 1.0;
+
         while !self.window.should_close() {
+            unsafe {
+                gl::Clear(gl::COLOR_BUFFER_BIT);
+            }
+            for (_, event) in glfw::flush_messages(&self.events) {
+                handle_window_event(&mut self.window, event, &mut moving_up, &mut moving_down, &mut moving_left, &mut moving_right, &mut mixvalue, &mut rot_cwise, &mut rot_ccwise);
+            }
+
             if gradient1 <= 0.0 || gradient1 >= 1.0 {
                 sign1*=-1.0;
             }
@@ -404,11 +425,21 @@ impl Application {
             gradient1 = gradient1 + (0.005*sign1);
             gradient2 = gradient2 + (0.005*sign2);
             gradient3 = gradient3 + (0.005*sign3);
+
+            self.use_program_at_index(0);
+            self.vertex_descriptors[0].bind();
             
             self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient3,gradient2)));
             self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient3,gradient2,gradient1)));
             self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient2,gradient3)));
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient3,gradient2)));
+
+            self.vertex_descriptors[0].render();
+            unsafe {
+                gl::BindVertexArray(0);
+            }
+            self.window.swap_buffers();
+            self.glfw.poll_events();
         }
     }
 

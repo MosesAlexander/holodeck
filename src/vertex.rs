@@ -42,8 +42,8 @@ impl VertexDescriptor {
             num_elements: 0,
         };
 
-        vertex_descriptor.buffer.bind();
-        vertex_descriptor.bind();
+        //vertex_descriptor.buffer.bind();
+        //vertex_descriptor.bind();
         vertex_descriptor
     }
 
@@ -62,6 +62,7 @@ impl VertexDescriptor {
 
     pub fn set_attributes(&mut self, attributes: AtrributesDescriptor) -> Result<(), String> {
         self.bind();
+        self.buffer.bind();
 
         for attr_idx in 0..attributes.component_groups {
             unsafe {

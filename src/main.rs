@@ -111,8 +111,9 @@ fn main() {
 		component_nums: vec![3, 3],
 		component_types: vec![gl::FLOAT, gl::FLOAT],
 		component_offsets: vec![0, 3],
-		component_strides: vec![0, 3],
+		component_strides: vec![6, 6],
 	};
+
 	match two_triangles_vert_desc.set_attributes(two_triangles_attr) {
 		Ok(()) => {},
 		Err(e) => {
@@ -148,6 +149,14 @@ fn main() {
 
 	let mut buffer2 = BufferDescriptor::new(vertices_third_triangle);
 	let mut third_triangle_vert_desc = VertexDescriptor::new(buffer2);
+	let mut third_triangle_attr = AtrributesDescriptor {
+		component_groups: 3,
+		component_nums: vec![3, 3, 2],
+		component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
+		component_offsets: vec![0, 3, 6],
+		component_strides: vec![0, 3, 6],
+	};
+	third_triangle_vert_desc.set_attributes(third_triangle_attr);
 
 	let texture1_desc = TextureDescriptor::new(program2.id, "texture1", "src/stallman.jpg", gl::RGB);
 	let texture2_desc = TextureDescriptor::new(program2.id, "texture2", "src/gnu.png", gl::RGBA);
@@ -156,15 +165,9 @@ fn main() {
 	third_triangle_vert_desc.add_texture(texture2_desc);
 	third_triangle_vert_desc.set_indexed_drawing(indices_third_triangle);
 
-	/*
-	app.generate_indexed_triangles(&vertices_indexed_two_triangles,
-				&indices_two_triangles,
-				&vertices_third_triangle,
-				&indices_third_triangle);
-				*/
-
 	app.add_vertex_descriptor(two_triangles_vert_desc);
 	app.add_vertex_descriptor(third_triangle_vert_desc);
-	app.render_loop();
+
+	app.render_vaos();
 }
 
