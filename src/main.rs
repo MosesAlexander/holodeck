@@ -154,12 +154,31 @@ fn main() {
 		component_nums: vec![3, 3, 2],
 		component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
 		component_offsets: vec![0, 3, 6],
-		component_strides: vec![0, 3, 6],
+		component_strides: vec![8, 8, 8],
 	};
 	third_triangle_vert_desc.set_attributes(third_triangle_attr);
 
 	let texture1_desc = TextureDescriptor::new(program2.id, "texture1", "src/stallman.jpg", gl::RGB);
 	let texture2_desc = TextureDescriptor::new(program2.id, "texture2", "src/gnu.png", gl::RGBA);
+
+	let transform_uniform = UniformDescriptor::new(
+		program2.id, 
+		"transform"
+	);
+
+	let translate_uniform = UniformDescriptor::new(
+		program2.id,
+		"translate",
+	);
+
+	let mixvalue_uniform = UniformDescriptor::new(
+		program2.id,
+		"mixvalue",
+	);
+
+	third_triangle_vert_desc.add_uniform(transform_uniform);
+	third_triangle_vert_desc.add_uniform(translate_uniform);
+	third_triangle_vert_desc.add_uniform(mixvalue_uniform);
 
 	third_triangle_vert_desc.add_texture(texture1_desc);
 	third_triangle_vert_desc.add_texture(texture2_desc);

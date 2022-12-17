@@ -9,7 +9,7 @@ pub struct VertexDescriptor {
     ebo_id: gl::types::GLuint,
     format: gl::types::GLenum,
     pub uniforms: Vec<UniformDescriptor>,
-    textures: Vec<TextureDescriptor>,
+    pub textures: Vec<TextureDescriptor>,
     num_elements: gl::types::GLsizei,
 }
 

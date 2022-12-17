@@ -1,5 +1,6 @@
 use crate::gl;
 use std::ffi::{CString};
+use glam::*;
 
 // Every uniform is associated with a program
 pub struct UniformDescriptor {
@@ -12,10 +13,13 @@ pub struct Uniform1IParam(pub i32);
 
 pub struct Uniform1FParam(pub f32);
 
+pub struct Uniform4FVMatrix (pub Mat4);
+
 pub enum UniformPackedParam {
     Uniform3F(Uniform3FParam),
     Uniform1I(Uniform1IParam),
     Uniform1F(Uniform1FParam),
+    UniformMatrix4FV(Uniform4FVMatrix),
 }
 
 impl UniformDescriptor {
@@ -29,8 +33,8 @@ impl UniformDescriptor {
         UniformDescriptor { uniform_shader_handle: uniform_shader_handle }
     }
 
-    pub fn update(&mut self, packedParam: UniformPackedParam) {
-        match packedParam {
+    pub fn update(&mut self, packed_param: UniformPackedParam) {
+        match packed_param {
             UniformPackedParam::Uniform1F(param) => {
                 unsafe {
                     gl::Uniform1f(self.uniform_shader_handle, param.0);
@@ -45,6 +49,11 @@ impl UniformDescriptor {
             UniformPackedParam::Uniform1I(param) => {
                 unsafe {
                     gl::Uniform1i(self.uniform_shader_handle, param.0);
+                }
+            }
+            UniformPackedParam::UniformMatrix4FV(param) => {
+                unsafe {
+                    gl::UniformMatrix4fv(self.uniform_shader_handle, 1, gl::FALSE, &param.0.to_cols_array()[0]);
                 }
             }
         }

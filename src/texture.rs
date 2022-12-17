@@ -14,7 +14,7 @@ impl TextureDescriptor {
         let mut height: c_int = 0;
         let mut nr_channels: c_int = 0;
         let mut texture_id: gl::types::GLuint = 0;
-        let mut path_string = CString::new(path).unwrap();
+        let path_string = CString::new(path).unwrap();
         let mut texture_shader_handle = 0;
         unsafe {
             texture_shader_handle = gl::GetUniformLocation(bound_program_id, CString::new(shader_handle_name.to_string()).unwrap().as_ptr());

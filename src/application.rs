@@ -435,9 +435,45 @@ impl Application {
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient3,gradient2)));
 
             self.vertex_descriptors[0].render();
-            unsafe {
-                gl::BindVertexArray(0);
+           // unsafe {
+             //   gl::BindVertexArray(0);
+           // }
+
+            self.use_program_at_index(1);
+
+            self.vertex_descriptors[1].bind();
+
+            if moving_down == true {
+                cur_off_y-=0.02;
             }
+            if moving_up == true {
+                cur_off_y+=0.02;
+            }
+            if moving_left == true {
+                cur_off_x-=0.02;
+            }
+            if moving_right == true {
+                cur_off_x+=0.02;
+            }
+            if rot_ccwise == true {
+                angle_multiplier += 0.01;
+            }
+            if rot_cwise == true {
+                angle_multiplier -= 0.01;
+            }
+
+            let transform_matrix = Mat4::from_rotation_z(std::f32::consts::PI * angle_multiplier);
+            let translation_matrix = Mat4::from_translation(Vec3::new(cur_off_x, cur_off_y, 0.0));
+
+            self.vertex_descriptors[1].textures[0].set_active_texture(0);
+            self.vertex_descriptors[1].textures[1].set_active_texture(1);
+
+            self.vertex_descriptors[1].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(transform_matrix)));
+            self.vertex_descriptors[1].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(translation_matrix)));
+            self.vertex_descriptors[1].uniforms[2].update(UniformPackedParam::Uniform1F(Uniform1FParam(mixvalue)));
+            
+            self.vertex_descriptors[1].render();
+
             self.window.swap_buffers();
             self.glfw.poll_events();
         }
