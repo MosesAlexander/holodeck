@@ -17,10 +17,15 @@ impl TextureDescriptor {
         let path_string = CString::new(path).unwrap();
         let mut texture_shader_handle = 0;
         unsafe {
-            texture_shader_handle = gl::GetUniformLocation(bound_program_id, CString::new(shader_handle_name.to_string()).unwrap().as_ptr());
+            texture_shader_handle = gl::GetUniformLocation(bound_program_id,
+                CString::new(shader_handle_name.to_string()).unwrap().as_ptr()
+            );
             gl::GenTextures(1, &mut texture_id);
         }
-        let texture_desc = TextureDescriptor { texture_id: texture_id, texture_shader_handle: texture_shader_handle};
+        let texture_desc = TextureDescriptor { texture_id: texture_id, 
+            texture_shader_handle: texture_shader_handle
+        };
+
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, texture_id);
 
@@ -31,7 +36,12 @@ impl TextureDescriptor {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
             stbi_set_flip_vertically_on_load(1);
-            let buffer = stbi_load(path_string.as_ptr(), &mut width, &mut height, &mut nr_channels, 0);
+            let buffer = stbi_load(path_string.as_ptr(),
+                &mut width, 
+                &mut height, 
+                &mut nr_channels, 
+                0
+            );
 
             if (!buffer.is_null()) {
                 gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, width, height, 0,
@@ -49,7 +59,7 @@ impl TextureDescriptor {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + idx);
             gl::BindTexture(gl::TEXTURE_2D, self.texture_id);
-            gl::Uniform1i(self.texture_id as i32, idx as i32);
+            gl::Uniform1i(self.texture_shader_handle as i32, idx as i32);
         }
     }
 

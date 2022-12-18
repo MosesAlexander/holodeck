@@ -240,7 +240,6 @@ impl Application {
 
         }
 
-
         self.vaos.push(vao);
         self.vaos.push(vao2);
         self.textures.push(texture1_id);
