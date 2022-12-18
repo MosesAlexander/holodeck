@@ -254,24 +254,16 @@ impl Application {
         let mut sign2 = 1.0;
         let mut sign3 = 1.0;
 
-        let position_offset: gl::types::GLint;
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
-        let mut texture1_id: gl::types::GLint = 0;
-        let mut texture2_id: gl::types::GLint = 0;
-        let mut mixvalue_id: gl::types::GLint = 0;
         let mut mixvalue: f32 = 0.2;
-        let mut transform_id: gl::types::GLint = 0;
         let mut moving_up: bool = false;
         let mut moving_down: bool = false;
         let mut moving_left: bool = false;
         let mut moving_right: bool = false;
-        let mut translate_id: gl::types::GLint = 0;
         let mut angle_multiplier: f32 = 0.0;
         let mut rot_cwise = false;
         let mut rot_ccwise = false;
-
-        let mut sign = 1.0;
 
         while !self.window.should_close() {
             unsafe {
