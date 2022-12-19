@@ -264,13 +264,26 @@ impl Application {
         let mut angle_multiplier: f32 = 0.0;
         let mut rot_cwise = false;
         let mut rot_ccwise = false;
+        let mut mixvalue_grow = false;
+        let mut mixvalue_shrink = false;
+
 
         while !self.window.should_close() {
             unsafe {
                 gl::Clear(gl::COLOR_BUFFER_BIT);
             }
             for (_, event) in glfw::flush_messages(&self.events) {
-                handle_window_event(&mut self.window, event, &mut moving_up, &mut moving_down, &mut moving_left, &mut moving_right, &mut mixvalue, &mut rot_cwise, &mut rot_ccwise);
+                handle_window_event(&mut self.window,
+                    event,
+                    &mut moving_up, 
+                    &mut moving_down, 
+                    &mut moving_left, 
+                    &mut moving_right, 
+                    &mut rot_cwise, 
+                    &mut rot_ccwise,
+                    &mut mixvalue_grow,
+                    &mut mixvalue_shrink,
+                );
             }
 
             if gradient1 <= 0.0 || gradient1 >= 1.0 {
@@ -298,9 +311,6 @@ impl Application {
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::Uniform3F(Uniform3FParam(gradient1,gradient3,gradient2)));
 
             self.vertex_descriptors[0].render();
-           // unsafe {
-             //   gl::BindVertexArray(0);
-           // }
 
             self.use_program_at_index(1);
 
@@ -331,6 +341,13 @@ impl Application {
             self.vertex_descriptors[1].textures[0].set_active_texture(0);
             self.vertex_descriptors[1].textures[1].set_active_texture(1);
 
+            if mixvalue_grow == true {
+                mixvalue+=0.02;
+            }
+            if mixvalue_shrink == true {
+                mixvalue-=0.02;
+            }
+
             self.vertex_descriptors[1].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(transform_matrix)));
             self.vertex_descriptors[1].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(translation_matrix)));
             self.vertex_descriptors[1].uniforms[2].update(UniformPackedParam::Uniform1F(Uniform1FParam(mixvalue)));
@@ -348,12 +365,20 @@ impl Application {
 
 }
 
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, moving_up: &mut bool, moving_down: &mut bool, moving_left: &mut bool, moving_right: &mut bool, mixvalue: &mut f32, rotate_clockwise: &mut bool, rotate_counterclockwise: &mut bool) {
+fn handle_window_event(window: &mut glfw::Window,
+                    event: glfw::WindowEvent,
+                    moving_up: &mut bool,
+                    moving_down: &mut bool,
+                    moving_left: &mut bool,
+                    moving_right: &mut bool,
+                    rotate_clockwise: &mut bool,
+                    rotate_counterclockwise: &mut bool,
+                    mixvalue_grow: &mut bool,
+                    mixvalue_shrink: &mut bool) {
 	match event {
 		glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
 			window.set_should_close(true)
 		}
-
 		glfw::WindowEvent::Key(Key::Up, _, Action::Press, _ )  => {
             *moving_up = true;
 		}
@@ -393,11 +418,18 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, movi
 
         
         glfw::WindowEvent::Key(Key::I, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::I, _, Action::Press, _ ) => {
-            *mixvalue+=0.01;
+            *mixvalue_grow = true;
+		}
+        glfw::WindowEvent::Key(Key::I, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::I, _, Action::Release, _ ) => {
+            *mixvalue_grow = false;
 		}
 		glfw::WindowEvent::Key(Key::U, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::U, _, Action::Press, _ ) => {
-            *mixvalue-=0.01;
+            *mixvalue_shrink = true;
 		}
+		glfw::WindowEvent::Key(Key::U, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::U, _, Action::Release, _ ) => {
+            *mixvalue_shrink = false;
+		}
+
 		glfw::WindowEvent::Key(Key::W, _, Action::Press, _ ) => {
 			unsafe {
                 gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
