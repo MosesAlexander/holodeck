@@ -27,7 +27,7 @@ void main()
 	} else if (aPos.x == 0.25 && aPos.y == 0.5) {
 		Color = color4;
 	} else {
-		Color = vec3(aPos.x + position_offset.x, aPos.y+position_offset.y, aPos.z);
+		Color = vec3(aPos.x + translate[3][0], aPos.y + translate[3][1], aPos.z);
 		TexCoord = aTexCoord;
 		gl_Position = translate * transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
 		return;
