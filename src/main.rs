@@ -161,9 +161,19 @@ fn main() {
 	let texture1_desc = TextureDescriptor::new(program2.id, "texture1", "src/stallman.jpg", gl::RGB);
 	let texture2_desc = TextureDescriptor::new(program2.id, "texture2", "src/gnu.png", gl::RGBA);
 
-	let transform_uniform = UniformDescriptor::new(
+	let rotate_about_x_uniform = UniformDescriptor::new(
 		program2.id, 
-		"transform"
+		"rotate_about_x"
+	);
+
+	let rotate_about_y_uniform = UniformDescriptor::new(
+		program2.id, 
+		"rotate_about_y"
+	);
+
+	let rotate_about_z_uniform = UniformDescriptor::new(
+		program2.id, 
+		"rotate_about_z"
 	);
 
 	let translate_uniform = UniformDescriptor::new(
@@ -176,7 +186,9 @@ fn main() {
 		"mixvalue",
 	);
 
-	third_triangle_vert_desc.add_uniform(transform_uniform);
+	third_triangle_vert_desc.add_uniform(rotate_about_x_uniform);
+	third_triangle_vert_desc.add_uniform(rotate_about_y_uniform);
+	third_triangle_vert_desc.add_uniform(rotate_about_z_uniform);
 	third_triangle_vert_desc.add_uniform(translate_uniform);
 	third_triangle_vert_desc.add_uniform(mixvalue_uniform);
 

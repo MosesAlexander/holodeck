@@ -11,7 +11,9 @@ uniform vec3 color4;
 out vec3 Color;
 out vec2 TexCoord;
 
-uniform mat4 transform;
+uniform mat4 rotate_about_x;
+uniform mat4 rotate_about_y;
+uniform mat4 rotate_about_z;
 uniform mat4 translate;
 
 void main()
@@ -27,7 +29,7 @@ void main()
 	} else {
 		Color = vec3(aPos.x + translate[3][0], aPos.y + translate[3][1], aPos.z);
 		TexCoord = aTexCoord;
-		gl_Position = translate * transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+		gl_Position = translate * rotate_about_x * rotate_about_y * rotate_about_z * vec4(aPos.x, aPos.y, aPos.z, 1.0);
 		return;
 	}
 
