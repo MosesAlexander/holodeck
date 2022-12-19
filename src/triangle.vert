@@ -7,8 +7,6 @@ uniform vec3 color1;
 uniform vec3 color2;
 uniform vec3 color3;
 uniform vec3 color4;
-uniform vec3 color5;
-uniform vec3 position_offset;
 
 out vec3 Color;
 out vec2 TexCoord;
@@ -34,5 +32,5 @@ void main()
 	}
 
 	//Color = color;
-	gl_Position = vec4(aPos.x + position_offset.x, aPos.y+position_offset.y, aPos.z, 1.0);
+	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
 }
