@@ -92,11 +92,14 @@ impl Application {
 
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
+        let mut cur_off_z: f32 = 0.0;
         let mut mixvalue: f32 = 0.2;
         let mut moving_up: bool = false;
         let mut moving_down: bool = false;
         let mut moving_left: bool = false;
         let mut moving_right: bool = false;
+        let mut moving_in: bool = false;
+        let mut moving_out: bool = false;
         let mut x_angle_multiplier: f32 = 0.0;
         let mut y_angle_multiplier: f32 = 0.0;
         let mut z_angle_multiplier: f32 = 0.0;
@@ -115,9 +118,12 @@ impl Application {
         let orthographic_projection_matrix = Mat4::orthographic_rh_gl(0.0, 800.0, 0.0, 600.0, 0.1, 100.0);
         println!("Orthographic projection matrix:\n{:?}", orthographic_projection_matrix);
 
+        */
         let perspective_projection_matrix = Mat4::perspective_rh_gl(f32::to_radians(45.0), 800.0/600.0, 0.1, 100.0);
         println!("Perspective projection matrix:\n{:?}", perspective_projection_matrix);
-        */
+        self.use_program_at_index(1);
+        self.vertex_descriptors[1].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(perspective_projection_matrix)));
+
         while !self.window.should_close() {
             unsafe {
                 gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -129,6 +135,8 @@ impl Application {
                     &mut moving_down, 
                     &mut moving_left, 
                     &mut moving_right, 
+                    &mut moving_in,
+                    &mut moving_out,
                     &mut x_rot_cwise, 
                     &mut x_rot_ccwise,
                     &mut y_rot_cwise, 
@@ -171,6 +179,12 @@ impl Application {
 
             self.vertex_descriptors[1].bind();
 
+            if moving_in == true {
+                cur_off_z+=0.02;
+            }
+            if moving_out == true {
+                cur_off_z-=0.02;
+            }
             if moving_down == true {
                 cur_off_y-=0.02;
             }
@@ -211,10 +225,12 @@ impl Application {
                 z_angle_multiplier = 0.0
             }
 
+            //println!("x: {} y: {} z: {}", cur_off_x, cur_off_y, cur_off_z);
+
             let rotate_about_x_matrix = Mat4::from_rotation_x(std::f32::consts::PI * x_angle_multiplier);
             let rotate_about_y_matrix = Mat4::from_rotation_y(std::f32::consts::PI * y_angle_multiplier);
             let rotate_about_z_matrix = Mat4::from_rotation_z(std::f32::consts::PI * z_angle_multiplier);
-            let translation_matrix = Mat4::from_translation(Vec3::new(cur_off_x, cur_off_y, 0.0));
+            let translation_matrix = Mat4::from_translation(Vec3::new(cur_off_x, cur_off_y, cur_off_z));
 
             self.vertex_descriptors[1].textures[0].set_active_texture(0);
             self.vertex_descriptors[1].textures[1].set_active_texture(1);
@@ -251,6 +267,8 @@ fn handle_window_event(window: &mut glfw::Window,
                     moving_down: &mut bool,
                     moving_left: &mut bool,
                     moving_right: &mut bool,
+                    moving_in: &mut bool,
+                    moving_out: &mut bool,
                     x_rotate_cwise: &mut bool,
                     x_rotate_ccwise: &mut bool,
                     y_rotate_cwise: &mut bool,
@@ -263,6 +281,18 @@ fn handle_window_event(window: &mut glfw::Window,
 	match event {
 		glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
 			window.set_should_close(true)
+		}
+		glfw::WindowEvent::Key(Key::C, _, Action::Press, _ )  => {
+            *moving_in = true;
+		}
+		glfw::WindowEvent::Key(Key::C, _, Action::Release, _ )  => {
+            *moving_in = false;
+		}
+		glfw::WindowEvent::Key(Key::Z, _, Action::Press, _ )  => {
+            *moving_out = true;
+		}
+		glfw::WindowEvent::Key(Key::Z, _, Action::Release, _ )  => {
+            *moving_out = false;
 		}
 		glfw::WindowEvent::Key(Key::Up, _, Action::Press, _ )  => {
             *moving_up = true;

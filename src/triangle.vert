@@ -15,6 +15,7 @@ uniform mat4 rotate_about_x;
 uniform mat4 rotate_about_y;
 uniform mat4 rotate_about_z;
 uniform mat4 translate;
+uniform mat4 projection;
 
 void main()
 {
@@ -27,9 +28,9 @@ void main()
 	} else if (aPos.x == 0.25 && aPos.y == 0.5) {
 		Color = color4;
 	} else {
-		Color = vec3(aPos.x + translate[3][0], aPos.y + translate[3][1], aPos.z);
+		Color = vec3(aPos.x + translate[3][0], aPos.y + translate[3][1], aPos.z + translate[3][2]);
 		TexCoord = aTexCoord;
-		gl_Position = translate * rotate_about_x * rotate_about_y * rotate_about_z * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+		gl_Position = projection * translate * rotate_about_x * rotate_about_y * rotate_about_z * vec4(aPos.x, aPos.y, aPos.z, 1.0);
 		return;
 	}
 

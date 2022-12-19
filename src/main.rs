@@ -186,11 +186,17 @@ fn main() {
 		"mixvalue",
 	);
 
+	let projection_uniform = UniformDescriptor::new(
+		program2.id,
+		"projection",
+	);
+
 	third_triangle_vert_desc.add_uniform(rotate_about_x_uniform);
 	third_triangle_vert_desc.add_uniform(rotate_about_y_uniform);
 	third_triangle_vert_desc.add_uniform(rotate_about_z_uniform);
 	third_triangle_vert_desc.add_uniform(translate_uniform);
 	third_triangle_vert_desc.add_uniform(mixvalue_uniform);
+	third_triangle_vert_desc.add_uniform(projection_uniform);
 
 	third_triangle_vert_desc.add_texture(texture1_desc);
 	third_triangle_vert_desc.add_texture(texture2_desc);
