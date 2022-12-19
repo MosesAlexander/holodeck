@@ -253,16 +253,16 @@ fn handle_window_event(window: &mut glfw::Window,
 		}
 
         
-        glfw::WindowEvent::Key(Key::I, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::I, _, Action::Press, _ ) => {
+        glfw::WindowEvent::Key(Key::I, _, Action::Press, _ ) => {
             *mixvalue_grow = true;
 		}
-        glfw::WindowEvent::Key(Key::I, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::I, _, Action::Release, _ ) => {
+        glfw::WindowEvent::Key(Key::I, _, Action::Release, _ ) => {
             *mixvalue_grow = false;
 		}
-		glfw::WindowEvent::Key(Key::U, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::U, _, Action::Press, _ ) => {
+		glfw::WindowEvent::Key(Key::U, _, Action::Press, _ ) => {
             *mixvalue_shrink = true;
 		}
-		glfw::WindowEvent::Key(Key::U, _, Action::Repeat, _ ) | glfw::WindowEvent::Key(Key::U, _, Action::Release, _ ) => {
+		glfw::WindowEvent::Key(Key::U, _, Action::Release, _ ) => {
             *mixvalue_shrink = false;
 		}
 
