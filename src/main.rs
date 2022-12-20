@@ -5,6 +5,7 @@ pub mod buffer;
 pub mod vertex;
 pub mod texture;
 pub mod uniform;
+pub mod cube;
 
 use application::{Application, FRAGMENT_SHADER, VERTEX_SHADER};
 use buffer::BufferDescriptor;
@@ -13,6 +14,7 @@ use shader::Shader;
 use program::{Program};
 use texture::TextureDescriptor;
 use uniform::*;
+use cube::*;
 
 mod gl {
         include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -84,83 +86,12 @@ fn main() {
 		0.5, 0.0, 0.98, 0.0, 0.0, 1.0,
 	];
 
-	/*
-	let vertices_cube: Vec<f32> = vec! [
-		//position			//colors			//texture coords
-		-0.35, 0.20, 0.0,	0.8, 0.8, 0.8,		0.0, 0.0, // bottom left
-		-0.35, 0.90, 0.0,	0.3, 0.3, 0.3,		0.0, 1.0, // top left
-		 0.35, 0.20, 0.0,	0.1, 0.1, 0.1,		1.0, 0.0, // bottom right
-		 0.35, 0.90, 0.0,	0.5, 0.5, 0.5,		1.0, 1.0, // top right
-	];
-	*/
-
-	// Because of textures, each vertex needs 3 copies in the current format
-	// so that each face can have a proper texture
-	let vertices_cube: Vec<f32> = vec! [
-		//position			//colors			//texture coords
-		// Coord A
-		 0.5,  0.5, -0.5,	0.8, 0.8, 0.8,		0.0, 1.0, // Top left
-		 0.5,  0.5, -0.5,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
-		 0.5,  0.5, -0.5,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
-
-		// Coord B
-		-0.5,  0.5, -0.5,	0.3, 0.3, 0.3,		1.0, 1.0, // Top right
-		-0.5,  0.5, -0.5,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
-		-0.5,  0.5, -0.5,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
-
-		// Coord C
-		 0.5, -0.5, -0.5,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
-		 0.5, -0.5, -0.5,	0.1, 0.1, 0.1,		1.0, 0.0, // Bottom right
-		 0.5, -0.5, -0.5,	0.1, 0.1, 0.1,		0.0, 1.0, // Top left
-
-		// Coord D
-		-0.5, -0.5, -0.5,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
-		-0.5, -0.5, -0.5,	0.5, 0.5, 0.5,		0.0, 0.0, // Bottom left
-		-0.5, -0.5, -0.5,	0.5, 0.5, 0.5,		1.0, 1.0, // Top right
-
-		// Coord E
-		 0.5,  0.5, 0.5,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
-		 0.5,  0.5, 0.5,	0.8, 0.8, 0.8,		0.0, 1.0, // Top left
-		 0.5,  0.5, 0.5,	0.8, 0.8, 0.8,		1.0, 0.0, // Bottom right
-
-		// Coord F
-		-0.5,  0.5, 0.5,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
-		-0.5,  0.5, 0.5,	0.3, 0.3, 0.3,		1.0, 1.0, // Top right
-		-0.5,  0.5, 0.5,	0.3, 0.3, 0.3,		0.0, 0.0, // Bottom left
-
-		// Coord G
-		 0.5, -0.5, 0.5,	0.1, 0.1, 0.1,		1.0, 0.0, // Bottom right
-		 0.5, -0.5, 0.5,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
-		 0.5, -0.5, 0.5,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
-
-		// Coord H
-		-0.5, -0.5, 0.5,	0.5, 0.5, 0.5,		0.0, 0.0, // Bottom left
-		-0.5, -0.5, 0.5,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
-		-0.5, -0.5, 0.5,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
-	];
-
 	let indices_two_triangles: Vec<u32> = vec! [
 		0, 1, 2,
 		2, 0, 3,
 	];
 
-	/*
-	let indices_cube: Vec<u32> = vec! [
-		0, 2, 3,
-		0, 3, 1,
-	]; */
-
-	// This is just hell, gotta find a generic way to produce cubes..
-	let indices_cube: Vec<u32> = vec! [
-		0,3,9,	0,9,6, // first face
-		12,15,21,	12,21,18, // second face
-		2,5,17,	2,17,14, // third face
-		8,11,23,	8,23,20, // fourth face
-		1,13,19,	1,19,7, // fifth face
-		4,16,22,	4,22,10, // sixth face 
-	];
-
-
+	let cube = Cube::new(0.3, (0.0,0.0,0.0));
 
 
 	let mut buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles);
@@ -206,7 +137,7 @@ fn main() {
 	);
 	two_triangles_vert_desc.add_uniform(color4_uniform);
 
-	let mut buffer2 = BufferDescriptor::new(vertices_cube);
+	let mut buffer2 = BufferDescriptor::new(cube.vertices);
 	let mut cube_vert_desc = VertexDescriptor::new(buffer2);
 	let mut cube_attr = AtrributesDescriptor {
 		component_groups: 3,
@@ -259,7 +190,7 @@ fn main() {
 
 	cube_vert_desc.add_texture(texture1_desc);
 	cube_vert_desc.add_texture(texture2_desc);
-	cube_vert_desc.set_indexed_drawing(indices_cube);
+	cube_vert_desc.set_indexed_drawing(cube.indices);
 
 	app.add_vertex_descriptor(two_triangles_vert_desc);
 	app.add_vertex_descriptor(cube_vert_desc);
