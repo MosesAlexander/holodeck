@@ -84,24 +84,83 @@ fn main() {
 		0.5, 0.0, 0.0, 0.0, 0.0, 1.0,
 	];
 
-	let vertices_third_triangle: Vec<f32> = vec! [
+	/*
+	let vertices_cube: Vec<f32> = vec! [
 		//position			//colors			//texture coords
 		-0.35, 0.20, 0.0,	0.8, 0.8, 0.8,		0.0, 0.0, // bottom left
 		-0.35, 0.90, 0.0,	0.3, 0.3, 0.3,		0.0, 1.0, // top left
 		 0.35, 0.20, 0.0,	0.1, 0.1, 0.1,		1.0, 0.0, // bottom right
 		 0.35, 0.90, 0.0,	0.5, 0.5, 0.5,		1.0, 1.0, // top right
 	];
+	*/
 
+	// Because of textures, each vertex needs 3 copies in the current format
+	// so that each face can have a proper texture
+	let vertices_cube: Vec<f32> = vec! [
+		//position			//colors			//texture coords
+		// Coord A
+		 0.5,  0.5, -0.5,	0.8, 0.8, 0.8,		0.0, 1.0, // Top left
+		 0.5,  0.5, -0.5,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
+		 0.5,  0.5, -0.5,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
+
+		// Coord B
+		-0.5,  0.5, -0.5,	0.3, 0.3, 0.3,		1.0, 1.0, // Top right
+		-0.5,  0.5, -0.5,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
+		-0.5,  0.5, -0.5,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
+
+		// Coord C
+		 0.5, -0.5, -0.5,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
+		 0.5, -0.5, -0.5,	0.1, 0.1, 0.1,		1.0, 0.0, // Bottom right
+		 0.5, -0.5, -0.5,	0.1, 0.1, 0.1,		0.0, 1.0, // Top left
+
+		// Coord D
+		-0.5, -0.5, -0.5,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
+		-0.5, -0.5, -0.5,	0.5, 0.5, 0.5,		0.0, 0.0, // Bottom left
+		-0.5, -0.5, -0.5,	0.5, 0.5, 0.5,		1.0, 1.0, // Top right
+
+		// Coord E
+		 0.5,  0.5, 0.5,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
+		 0.5,  0.5, 0.5,	0.8, 0.8, 0.8,		0.0, 1.0, // Top left
+		 0.5,  0.5, 0.5,	0.8, 0.8, 0.8,		1.0, 0.0, // Bottom right
+
+		// Coord F
+		-0.5,  0.5, 0.5,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
+		-0.5,  0.5, 0.5,	0.3, 0.3, 0.3,		1.0, 1.0, // Top right
+		-0.5,  0.5, 0.5,	0.3, 0.3, 0.3,		0.0, 0.0, // Bottom left
+
+		// Coord G
+		 0.5, -0.5, 0.5,	0.1, 0.1, 0.1,		1.0, 0.0, // Bottom right
+		 0.5, -0.5, 0.5,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
+		 0.5, -0.5, 0.5,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
+
+		// Coord H
+		-0.5, -0.5, 0.5,	0.5, 0.5, 0.5,		0.0, 0.0, // Bottom left
+		-0.5, -0.5, 0.5,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
+		-0.5, -0.5, 0.5,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
+	];
 
 	let indices_two_triangles: Vec<u32> = vec! [
 		0, 1, 2,
 		2, 0, 3,
 	];
 
-	let indices_third_triangle: Vec<u32> = vec! [
+	/*
+	let indices_cube: Vec<u32> = vec! [
 		0, 2, 3,
 		0, 3, 1,
+	]; */
+
+	// This is just hell, gotta find a generic way to produce cubes..
+	let indices_cube: Vec<u32> = vec! [
+		0,3,9,	0,9,6, // first face
+		12,15,21,	12,21,18, // second face
+		2,5,17,	2,17,14, // third face
+		8,11,23,	8,23,20, // fourth face
+		1,13,19,	1,19,7, // fifth face
+		4,16,22,	4,22,10, // sixth face 
 	];
+
+
 
 
 	let mut buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles);
@@ -147,16 +206,16 @@ fn main() {
 	);
 	two_triangles_vert_desc.add_uniform(color4_uniform);
 
-	let mut buffer2 = BufferDescriptor::new(vertices_third_triangle);
-	let mut third_triangle_vert_desc = VertexDescriptor::new(buffer2);
-	let mut third_triangle_attr = AtrributesDescriptor {
+	let mut buffer2 = BufferDescriptor::new(vertices_cube);
+	let mut cube_vert_desc = VertexDescriptor::new(buffer2);
+	let mut cube_attr = AtrributesDescriptor {
 		component_groups: 3,
 		component_nums: vec![3, 3, 2],
 		component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
 		component_offsets: vec![0, 3, 6],
 		component_strides: vec![8, 8, 8],
 	};
-	third_triangle_vert_desc.set_attributes(third_triangle_attr);
+	cube_vert_desc.set_attributes(cube_attr);
 
 	let texture1_desc = TextureDescriptor::new(program2.id, "texture1", "src/stallman.jpg", gl::RGB);
 	let texture2_desc = TextureDescriptor::new(program2.id, "texture2", "src/gnu.png", gl::RGBA);
@@ -191,19 +250,19 @@ fn main() {
 		"projection",
 	);
 
-	third_triangle_vert_desc.add_uniform(rotate_about_x_uniform);
-	third_triangle_vert_desc.add_uniform(rotate_about_y_uniform);
-	third_triangle_vert_desc.add_uniform(rotate_about_z_uniform);
-	third_triangle_vert_desc.add_uniform(translate_uniform);
-	third_triangle_vert_desc.add_uniform(mixvalue_uniform);
-	third_triangle_vert_desc.add_uniform(projection_uniform);
+	cube_vert_desc.add_uniform(rotate_about_x_uniform);
+	cube_vert_desc.add_uniform(rotate_about_y_uniform);
+	cube_vert_desc.add_uniform(rotate_about_z_uniform);
+	cube_vert_desc.add_uniform(translate_uniform);
+	cube_vert_desc.add_uniform(mixvalue_uniform);
+	cube_vert_desc.add_uniform(projection_uniform);
 
-	third_triangle_vert_desc.add_texture(texture1_desc);
-	third_triangle_vert_desc.add_texture(texture2_desc);
-	third_triangle_vert_desc.set_indexed_drawing(indices_third_triangle);
+	cube_vert_desc.add_texture(texture1_desc);
+	cube_vert_desc.add_texture(texture2_desc);
+	cube_vert_desc.set_indexed_drawing(indices_cube);
 
 	app.add_vertex_descriptor(two_triangles_vert_desc);
-	app.add_vertex_descriptor(third_triangle_vert_desc);
+	app.add_vertex_descriptor(cube_vert_desc);
 
 	app.render_vaos();
 }
