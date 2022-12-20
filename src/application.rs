@@ -124,9 +124,12 @@ impl Application {
         self.use_program_at_index(1);
         self.vertex_descriptors[1].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(perspective_projection_matrix)));
 
+        unsafe {
+            gl::Enable(gl::DEPTH_TEST);
+        }
         while !self.window.should_close() {
             unsafe {
-                gl::Clear(gl::COLOR_BUFFER_BIT);
+                gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             }
             for (_, event) in glfw::flush_messages(&self.events) {
                 handle_window_event(&mut self.window,
