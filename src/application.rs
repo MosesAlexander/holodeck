@@ -235,6 +235,12 @@ impl Application {
             let rotate_about_z_matrix = Mat4::from_rotation_z(std::f32::consts::PI * z_angle_multiplier);
             let translation_matrix = Mat4::from_translation(Vec3::new(cur_off_x, cur_off_y, cur_off_z));
 
+            let rotate_about_x_matrix2 = Mat4::from_rotation_x(std::f32::consts::PI * -x_angle_multiplier);
+            let rotate_about_y_matrix2 = Mat4::from_rotation_y(std::f32::consts::PI * -y_angle_multiplier);
+            let rotate_about_z_matrix2 = Mat4::from_rotation_z(std::f32::consts::PI * -z_angle_multiplier);
+            let translation_matrix2 = Mat4::from_translation(Vec3::new(-cur_off_x, -cur_off_y, cur_off_z));
+
+
             self.vertex_descriptors[1].textures[0].set_active_texture(0);
             self.vertex_descriptors[1].textures[1].set_active_texture(1);
 
@@ -251,6 +257,14 @@ impl Application {
             self.vertex_descriptors[1].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(translation_matrix)));
             self.vertex_descriptors[1].uniforms[4].update(UniformPackedParam::Uniform1F(Uniform1FParam(mixvalue)));
             
+            self.vertex_descriptors[1].render();
+
+            self.vertex_descriptors[1].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(rotate_about_x_matrix2)));
+            self.vertex_descriptors[1].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(rotate_about_y_matrix2)));
+            self.vertex_descriptors[1].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(rotate_about_z_matrix2)));
+            self.vertex_descriptors[1].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(Uniform4FVMatrix(translation_matrix2)));
+            self.vertex_descriptors[1].uniforms[4].update(UniformPackedParam::Uniform1F(Uniform1FParam(mixvalue)));
+
             self.vertex_descriptors[1].render();
 
             self.window.swap_buffers();

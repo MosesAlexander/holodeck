@@ -33,6 +33,7 @@ impl VertexDescriptor {
             gl::GenVertexArrays(1, &mut vao_id);
             gl::GenBuffers(1, &mut ebo_id);
         }
+
         let vertex_descriptor = VertexDescriptor { buffer: buffer, 
             vao_id: vao_id, 
             ebo_id: ebo_id, 

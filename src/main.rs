@@ -91,10 +91,10 @@ fn main() {
 		2, 0, 3,
 	];
 
-	let cube = Cube::new(0.3, (0.0,0.0,0.0));
+	let cube = Cube::new(0.1, (0.0,0.0,0.0));
 
 
-	let mut buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles);
+	let mut buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles, (0.0,0.0,0.0));
 	let mut two_triangles_vert_desc = VertexDescriptor::new(buffer1);
 	let mut two_triangles_attr = AtrributesDescriptor {
 		component_groups: 2,
@@ -137,7 +137,7 @@ fn main() {
 	);
 	two_triangles_vert_desc.add_uniform(color4_uniform);
 
-	let mut buffer2 = BufferDescriptor::new(cube.vertices);
+	let mut buffer2 = BufferDescriptor::new(cube.vertices, cube.center);
 	let mut cube_vert_desc = VertexDescriptor::new(buffer2);
 	let mut cube_attr = AtrributesDescriptor {
 		component_groups: 3,

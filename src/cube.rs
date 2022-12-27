@@ -2,6 +2,7 @@
 pub struct Cube {
     pub vertices: Vec<f32>,
     pub indices: Vec<u32>,
+    pub center: (f32,f32,f32),
 }
 
 impl Cube {
@@ -61,6 +62,6 @@ impl Cube {
 		4,16,22,	4,22,10, // sixth face 
 	];
 
-        Cube{vertices: vertices_cube, indices: indices_cube}
+        Cube{vertices: vertices_cube, indices: indices_cube, center: center}
     }
 }
