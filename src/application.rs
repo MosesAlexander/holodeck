@@ -1,12 +1,12 @@
 extern crate glfw;
 
 use crate::uniform::*;
-use crate::vertex::*;
+
 use glam::*;
 use glfw::ffi::GLFWwindow;
 use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
-use stb_image::stb_image::bindgen::*;
-use std::ffi::{c_int, c_void, CString};
+
+
 use std::sync::mpsc::Receiver;
 
 use crate::gl;
@@ -41,7 +41,7 @@ impl Application {
             glfw::OpenGlProfileHint::Core,
         ));
 
-        let (mut window, mut events) = glfw
+        let (mut window, events) = glfw
             .create_window(800, 600, "MyOpenGL", glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 

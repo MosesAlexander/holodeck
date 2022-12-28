@@ -57,7 +57,7 @@ impl TextureDescriptor {
                 0,
             );
 
-            if (!buffer.is_null()) {
+            if !buffer.is_null() {
                 gl::TexImage2D(
                     gl::TEXTURE_2D,
                     0,

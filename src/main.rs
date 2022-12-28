@@ -86,9 +86,9 @@ fn main() {
 
     let cube = Cube::new(0.1, (0.0, 0.0, 0.0));
 
-    let mut buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles, (0.0, 0.0, 0.0));
+    let buffer1 = BufferDescriptor::new(vertices_indexed_two_triangles, (0.0, 0.0, 0.0));
     let mut two_triangles_vert_desc = VertexDescriptor::new(buffer1);
-    let mut two_triangles_attr = AtrributesDescriptor {
+    let two_triangles_attr = AtrributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 3],
         component_types: vec![gl::FLOAT, gl::FLOAT],
@@ -117,9 +117,9 @@ fn main() {
     let color4_uniform = UniformDescriptor::new(program1.id, "color4");
     two_triangles_vert_desc.add_uniform(color4_uniform);
 
-    let mut buffer2 = BufferDescriptor::new(cube.vertices, cube.center);
+    let buffer2 = BufferDescriptor::new(cube.vertices, cube.center);
     let mut cube_vert_desc = VertexDescriptor::new(buffer2);
-    let mut cube_attr = AtrributesDescriptor {
+    let cube_attr = AtrributesDescriptor {
         component_groups: 3,
         component_nums: vec![3, 3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
