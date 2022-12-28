@@ -1,5 +1,5 @@
-use crate::gl;
 use crate::buffer::*;
+use crate::gl;
 use crate::texture::TextureDescriptor;
 use crate::uniform::UniformDescriptor;
 
@@ -34,11 +34,12 @@ impl VertexDescriptor {
             gl::GenBuffers(1, &mut ebo_id);
         }
 
-        let vertex_descriptor = VertexDescriptor { buffer: buffer, 
-            vao_id: vao_id, 
-            ebo_id: ebo_id, 
-            format: gl::FLOAT, 
-            uniforms: Vec::new(), 
+        let vertex_descriptor = VertexDescriptor {
+            buffer: buffer,
+            vao_id: vao_id,
+            ebo_id: ebo_id,
+            format: gl::FLOAT,
+            uniforms: Vec::new(),
             textures: Vec::new(),
             num_elements: 0,
         };
@@ -56,8 +57,12 @@ impl VertexDescriptor {
 
     pub fn render(&self) {
         unsafe {
-            gl::DrawElements(gl::TRIANGLES, self.num_elements, gl::UNSIGNED_INT, std::ptr::null());
-
+            gl::DrawElements(
+                gl::TRIANGLES,
+                self.num_elements,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
+            );
         }
     }
 
@@ -67,17 +72,31 @@ impl VertexDescriptor {
 
         for attr_idx in 0..attributes.component_groups {
             unsafe {
-                gl::VertexAttribPointer(attr_idx, attributes.component_nums[attr_idx as usize],
-                                        attributes.component_types[attr_idx as usize],
-                                        gl::FALSE,
-                                        match attributes.component_types[attr_idx as usize] {
-                                            gl::FLOAT => (attributes.component_strides[attr_idx as usize] as usize * std::mem::size_of::<f32>()) as gl::types::GLint,
-                                            gl::UNSIGNED_INT => (attributes.component_strides[attr_idx as usize] as usize * std::mem::size_of::<u32>()) as gl::types::GLint,
-                                            _ => {
-                                                return Err(format!("Invalid component type! {}", attributes.component_types[attr_idx as usize]));
-                                            }
-                                        },
-                                        (attributes.component_offsets[attr_idx as usize] * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
+                gl::VertexAttribPointer(
+                    attr_idx,
+                    attributes.component_nums[attr_idx as usize],
+                    attributes.component_types[attr_idx as usize],
+                    gl::FALSE,
+                    match attributes.component_types[attr_idx as usize] {
+                        gl::FLOAT => {
+                            (attributes.component_strides[attr_idx as usize] as usize
+                                * std::mem::size_of::<f32>())
+                                as gl::types::GLint
+                        }
+                        gl::UNSIGNED_INT => {
+                            (attributes.component_strides[attr_idx as usize] as usize
+                                * std::mem::size_of::<u32>())
+                                as gl::types::GLint
+                        }
+                        _ => {
+                            return Err(format!(
+                                "Invalid component type! {}",
+                                attributes.component_types[attr_idx as usize]
+                            ));
+                        }
+                    },
+                    (attributes.component_offsets[attr_idx as usize] * std::mem::size_of::<f32>())
+                        as *const gl::types::GLvoid,
                 );
                 gl::EnableVertexAttribArray(attr_idx);
             }
@@ -90,10 +109,11 @@ impl VertexDescriptor {
         self.num_elements = indices_array.len() as i32;
         unsafe {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo_id);
-            gl::BufferData(gl::ELEMENT_ARRAY_BUFFER,
-                                    (indices_array.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
-                                    indices_array.as_ptr() as *const gl::types::GLvoid,
-                                    gl::STATIC_DRAW
+            gl::BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (indices_array.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
+                indices_array.as_ptr() as *const gl::types::GLvoid,
+                gl::STATIC_DRAW,
             )
         }
     }
@@ -105,6 +125,4 @@ impl VertexDescriptor {
     pub fn add_texture(&mut self, texture: TextureDescriptor) {
         self.textures.push(texture);
     }
-
 }
-

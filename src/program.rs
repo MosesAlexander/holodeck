@@ -1,7 +1,6 @@
-
 use crate::shader::*;
 
-use std::ffi::{CString};
+use std::ffi::CString;
 
 use crate::gl;
 
@@ -13,12 +12,15 @@ pub struct Program {
 impl Program {
     pub fn new() -> Program {
         unsafe {
-            Program { id: gl::CreateProgram(), shader_ids: Vec::new() }
+            Program {
+                id: gl::CreateProgram(),
+                shader_ids: Vec::new(),
+            }
         }
     }
 
     pub fn add_shader(&mut self, shader: &Shader) {
-            self.shader_ids.push(shader.id);
+        self.shader_ids.push(shader.id);
     }
 
     pub fn link_shaders(&self) -> Result<(), String> {
@@ -46,7 +48,7 @@ impl Program {
                     self.id,
                     len,
                     std::ptr::null_mut(),
-                    error.as_ptr() as *mut gl::types::GLchar
+                    error.as_ptr() as *mut gl::types::GLchar,
                 );
 
                 return Err(error.to_string_lossy().into_owned());
@@ -73,9 +75,7 @@ impl Drop for Program {
 
 pub fn create_whitespace_cstring_with_len(len: usize) -> CString {
     // allocate buffer of correct size
-    let mut buffer: Vec<u8> = Vec::with_capacity(len+1);
+    let mut buffer: Vec<u8> = Vec::with_capacity(len + 1);
     buffer.extend([b' '].iter().cycle().take(len));
-    unsafe {
-        CString::from_vec_unchecked(buffer)
-    }
+    unsafe { CString::from_vec_unchecked(buffer) }
 }

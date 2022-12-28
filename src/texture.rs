@@ -1,6 +1,6 @@
 use crate::gl;
-use std::ffi::{CString, c_int, c_void};
 use stb_image::stb_image::bindgen::*;
+use std::ffi::{c_int, c_void, CString};
 
 pub struct TextureDescriptor {
     texture_id: gl::types::GLuint,
@@ -8,7 +8,12 @@ pub struct TextureDescriptor {
 }
 
 impl TextureDescriptor {
-    pub fn new(bound_program_id: gl::types::GLuint, shader_handle_name: &str, path: &str, format: gl::types::GLenum) -> TextureDescriptor {
+    pub fn new(
+        bound_program_id: gl::types::GLuint,
+        shader_handle_name: &str,
+        path: &str,
+        format: gl::types::GLenum,
+    ) -> TextureDescriptor {
         // Texture generation part
         let mut width: c_int = 0;
         let mut height: c_int = 0;
@@ -17,13 +22,17 @@ impl TextureDescriptor {
         let path_string = CString::new(path).unwrap();
         let mut texture_shader_handle = 0;
         unsafe {
-            texture_shader_handle = gl::GetUniformLocation(bound_program_id,
-                CString::new(shader_handle_name.to_string()).unwrap().as_ptr()
+            texture_shader_handle = gl::GetUniformLocation(
+                bound_program_id,
+                CString::new(shader_handle_name.to_string())
+                    .unwrap()
+                    .as_ptr(),
             );
             gl::GenTextures(1, &mut texture_id);
         }
-        let texture_desc = TextureDescriptor { texture_id: texture_id, 
-            texture_shader_handle: texture_shader_handle
+        let texture_desc = TextureDescriptor {
+            texture_id: texture_id,
+            texture_shader_handle: texture_shader_handle,
         };
 
         unsafe {
@@ -32,20 +41,34 @@ impl TextureDescriptor {
             // Set the texture wrapping/filtering options on the currently bound texture object
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR_MIPMAP_LINEAR as i32,
+            );
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
             stbi_set_flip_vertically_on_load(1);
-            let buffer = stbi_load(path_string.as_ptr(),
-                &mut width, 
-                &mut height, 
-                &mut nr_channels, 
-                0
+            let buffer = stbi_load(
+                path_string.as_ptr(),
+                &mut width,
+                &mut height,
+                &mut nr_channels,
+                0,
             );
 
             if (!buffer.is_null()) {
-                gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, width, height, 0,
-                                format, gl::UNSIGNED_BYTE, buffer as *const c_void);
+                gl::TexImage2D(
+                    gl::TEXTURE_2D,
+                    0,
+                    gl::RGB as i32,
+                    width,
+                    height,
+                    0,
+                    format,
+                    gl::UNSIGNED_BYTE,
+                    buffer as *const c_void,
+                );
                 gl::GenerateMipmap(gl::TEXTURE_2D);
                 stbi_image_free(buffer as *mut c_void);
             } else {
@@ -62,5 +85,4 @@ impl TextureDescriptor {
             gl::Uniform1i(self.texture_shader_handle as i32, idx as i32);
         }
     }
-
 }
