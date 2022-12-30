@@ -23,11 +23,12 @@ mod gl {
 fn main() {
     let mut app = Application::new();
 
-    let mut vert_shader = Shader::new("src/triangle.vert", VERTEX_SHADER);
-    let mut frag_shader1 = Shader::new("src/triangle3.frag", FRAGMENT_SHADER);
-    let mut frag_shader2 = Shader::new("src/triangle2.frag", FRAGMENT_SHADER);
+    let mut vert_shader_cube = Shader::new("src/cube.vert", VERTEX_SHADER);
+    let mut frag_shader_cube = Shader::new("src/cube.frag", FRAGMENT_SHADER);
+    let mut vert_shader_para = Shader::new("src/paralellogram.vert", VERTEX_SHADER);
+    let mut frag_shader_para = Shader::new("src/paralellogram.frag", FRAGMENT_SHADER);
 
-    match vert_shader.compile() {
+    match vert_shader_cube.compile() {
         Ok(()) => {}
         Err(e) => {
             println!("ERROR: {}, exiting program", e);
@@ -35,7 +36,7 @@ fn main() {
         }
     }
 
-    match frag_shader1.compile() {
+	match vert_shader_para.compile() {
         Ok(()) => {}
         Err(e) => {
             println!("ERROR: {}, exiting program", e);
@@ -43,7 +44,16 @@ fn main() {
         }
     }
 
-    match frag_shader2.compile() {
+
+    match frag_shader_para.compile() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("ERROR: {}, exiting program", e);
+            std::process::exit(1);
+        }
+    }
+
+    match frag_shader_cube.compile() {
         Ok(()) => {}
         Err(e) => {
             println!("ERROR: {}, exiting program", e);
@@ -54,8 +64,8 @@ fn main() {
     let mut program1 = Program::new();
     let mut program2 = Program::new();
 
-    program1.add_shader(&vert_shader);
-    program1.add_shader(&frag_shader1);
+    program1.add_shader(&vert_shader_para);
+    program1.add_shader(&frag_shader_para);
     match program1.link_shaders() {
         Ok(()) => {}
         Err(e) => {
@@ -64,8 +74,8 @@ fn main() {
         }
     }
 
-    program2.add_shader(&vert_shader);
-    program2.add_shader(&frag_shader2);
+    program2.add_shader(&vert_shader_cube);
+    program2.add_shader(&frag_shader_cube);
     match program2.link_shaders() {
         Ok(()) => {}
         Err(e) => {
