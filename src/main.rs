@@ -120,11 +120,11 @@ fn main() {
     let buffer2 = BufferDescriptor::new(cube.vertices, cube.center);
     let mut cube_vert_desc = VertexDescriptor::new(buffer2);
     let cube_attr = AtrributesDescriptor {
-        component_groups: 3,
-        component_nums: vec![3, 3, 2],
+        component_groups: 2,
+        component_nums: vec![3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
-        component_offsets: vec![0, 3, 6],
-        component_strides: vec![8, 8, 8],
+        component_offsets: vec![0, 3],
+        component_strides: vec![5, 5],
     };
     cube_vert_desc.set_attributes(cube_attr);
 

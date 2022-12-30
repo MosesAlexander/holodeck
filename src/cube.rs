@@ -10,47 +10,48 @@ impl Cube {
         // Because of textures, each vertex needs 3 copies in the current format
         // so that each face can have a proper texture
         let vertices_cube: Vec<f32> = vec! [
-		//position			//colors			//texture coords
-		// Coord A
-		center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.8, 0.8, 0.8,		0.0, 1.0, // Top left
-		center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
-		center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
+            //position			//colors			//texture coords
+            // Coord A
+            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
+            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
+            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
 
-		// Coord B
-		center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.3, 0.3, 0.3,		1.0, 1.0, // Top right
-		center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
-		center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
+            // Coord B
+            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
+            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
+            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
 
-		// Coord C
-		center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
-		center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.1, 0.1, 0.1,		1.0, 0.0, // Bottom right
-		center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.1, 0.1, 0.1,		0.0, 1.0, // Top left
+            // Coord C
+            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.0, 0.0, // Bottom left
+            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	1.0, 0.0, // Bottom right
+            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
 
-		// Coord D
-		center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
-		center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.5, 0.5, 0.5,		0.0, 0.0, // Bottom left
-		center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.5, 0.5, 0.5,		1.0, 1.0, // Top right
+            // Coord D
+            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	1.0, 0.0, // Bottom right
+            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.0, 0.0, // Bottom left
+            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
 
-		// Coord E
-		center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.8, 0.8, 0.8,		1.0, 1.0, // Top right
-		center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.8, 0.8, 0.8,		0.0, 1.0, // Top left
-		center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.8, 0.8, 0.8,		1.0, 0.0, // Bottom right
+            // Coord E
+            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	1.0, 1.0, // Top right
+            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.0, 1.0, // Top left
+            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
 
-		// Coord F
-		center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.3, 0.3, 0.3,		0.0, 1.0, // Top left
-		center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.3, 0.3, 0.3,		1.0, 1.0, // Top right
-		center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.3, 0.3, 0.3,		0.0, 0.0, // Bottom left
+            // Coord F
+            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.0, 1.0, // Top left
+            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	1.0, 1.0, // Top right
+            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
 
-		// Coord G
-		center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.1, 0.1, 0.1,		1.0, 0.0, // Bottom right
-		center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
-		center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.1, 0.1, 0.1,		0.0, 0.0, // Bottom left
+            // Coord G
+            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
+            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
+            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
 
-		// Coord H
-		center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.5, 0.5, 0.5,		0.0, 0.0, // Bottom left
-		center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
-		center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.5, 0.5, 0.5,		1.0, 0.0, // Bottom right
-	];
+            // Coord H
+            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
+            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
+            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
+        ];
+
 
         // This is just hell, gotta find a generic way to produce cubes..
         let indices_cube: Vec<u32> = vec![
@@ -68,4 +69,81 @@ impl Cube {
             center: center,
         }
     }
+
+    pub fn generate_texture_coords(texture_corer: TextureCorner) -> [f32;2] {
+        match texture_corer {
+            TextureCorner::BottomLeft => {
+                [0.0, 0.0]
+            },
+            TextureCorner::BottomRight => {
+                [1.0, 0.0]
+            },
+            TextureCorner::TopLeft => {
+                [0.0, 0.1]
+            },
+            TextureCorner::TopRight => {
+                [1.0, 1.0]
+            }
+        }
+    }
+
+    pub fn generate_cube_corner_coords(center_point: (f32,f32,f32), side_length: f32, cube_corner: CubeCorner) -> [f32;3] {
+        match cube_corner {
+            CubeCorner::COORDS_A => {
+                [center_point.0 + side_length / 2.0, center_point.1 + side_length / 2.0, center_point.2 - side_length / 2.0]
+            },
+            CubeCorner::COORDS_B => {
+                [center_point.0 - side_length / 2.0, center_point.1 + side_length / 2.0, center_point.2 - side_length / 2.0]
+            },
+            CubeCorner::COORDS_C => {
+                [center_point.0 + side_length / 2.0, center_point.1 - side_length / 2.0, center_point.2 - side_length / 2.0]
+            },
+            CubeCorner::COORDS_D => {
+                [center_point.0 - side_length / 2.0, center_point.1 - side_length / 2.0, center_point.2 - side_length / 2.0]
+
+            },
+            CubeCorner::COORDS_E => {
+                [center_point.0 + side_length / 2.0, center_point.1 + side_length / 2.0, center_point.2 + side_length / 2.0]
+            },
+            CubeCorner::COORDS_F => {
+                [center_point.0 - side_length / 2.0, center_point.1 + side_length / 2.0, center_point.2 + side_length / 2.0]
+            },
+            CubeCorner::COORDS_G => {
+                [center_point.0 + side_length / 2.0, center_point.1 - side_length / 2.0, center_point.2 + side_length / 2.0]
+            },
+            CubeCorner::COORDS_H => {
+                [center_point.0 - side_length / 2.0, center_point.1 - side_length / 2.0, center_point.2 + side_length / 2.0]
+            },
+        }
+    }
+
+
 }
+pub enum CubeCorner {
+    COORDS_A,
+    COORDS_B,
+    COORDS_C,
+    COORDS_D,
+    COORDS_E,
+    COORDS_F,
+    COORDS_G,
+    COORDS_H,
+}
+
+pub enum TextureCorner {
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight,
+}
+
+
+#[test]
+fn test_generate_cube_corner_coords() {
+    let cube = Cube::new(0.1, (0.0, 0.0, 0.0));
+
+    assert_eq!([1.0,1.0,1.0], Cube::generate_cube_corner_coords((0.0,0.0,0.0), 2.0));
+}
+
+
+
