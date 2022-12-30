@@ -9,49 +9,69 @@ impl Cube {
     pub fn new(side_length: f32, center: (f32, f32, f32)) -> Cube {
         // Because of textures, each vertex needs 3 copies in the current format
         // so that each face can have a proper texture
-        let vertices_cube: Vec<f32> = vec! [
-            //position			//colors			//texture coords
-            // Coord A
-            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
-            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
-            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
+        let mut vertices_cube: Vec<f32> = Vec::new();
 
-            // Coord B
-            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
-            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
-            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_A));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_A));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_A));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
 
-            // Coord C
-            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.0, 0.0, // Bottom left
-            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	1.0, 0.0, // Bottom right
-            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.0, 1.0, // Top left
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_B));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_B));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_B));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
 
-            // Coord D
-            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	1.0, 0.0, // Bottom right
-            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	0.0, 0.0, // Bottom left
-            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 - side_length / 2.0,	1.0, 1.0, // Top right
 
-            // Coord E
-            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	1.0, 1.0, // Top right
-            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.0, 1.0, // Top left
-            center.0 + side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_C));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_C));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_C));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
 
-            // Coord F
-            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.0, 1.0, // Top left
-            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	1.0, 1.0, // Top right
-            center.0 - side_length / 2.0,  center.1 + side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
 
-            // Coord G
-            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
-            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
-            center.0 + side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_D));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_D));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_D));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
 
-            // Coord H
-            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	0.0, 0.0, // Bottom left
-            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
-            center.0 - side_length / 2.0, center.1 - side_length / 2.0, center.2 + side_length / 2.0,	1.0, 0.0, // Bottom right
-        ];
 
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_E));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_E));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_E));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight));
+
+
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_F));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_F));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_F));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft));
+
+
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_G));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_G));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_G));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft));
+
+
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_H));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_H));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight));
+        vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_H));
+        vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight));
 
         // This is just hell, gotta find a generic way to produce cubes..
         let indices_cube: Vec<u32> = vec![
@@ -79,7 +99,7 @@ impl Cube {
                 [1.0, 0.0]
             },
             TextureCorner::TopLeft => {
-                [0.0, 0.1]
+                [0.0, 1.0]
             },
             TextureCorner::TopRight => {
                 [1.0, 1.0]
