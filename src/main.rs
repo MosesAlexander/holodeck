@@ -70,7 +70,8 @@ fn main() {
 
     let texture1_desc =
         TextureDescriptor::new(program_cube.id, "texture1", "src/stallman.jpg", gl::RGB);
-    let texture2_desc = TextureDescriptor::new(program_cube.id, "texture2", "src/gnu.png", gl::RGBA);
+    let texture2_desc =
+		TextureDescriptor::new(program_cube.id, "texture2", "src/gnu.png", gl::RGBA);
 
     let rotate_about_x_uniform = UniformDescriptor::new(program_cube.id, "rotate_about_x");
 

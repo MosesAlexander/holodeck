@@ -209,8 +209,6 @@ impl Application {
                 z_angle_multiplier = 0.0
             }
 
-            //println!("x: {} y: {} z: {}", cur_off_x, cur_off_y, cur_off_z);
-
             let rotate_about_x_matrix =
                 Mat4::from_rotation_x(std::f32::consts::PI * x_angle_multiplier);
             let rotate_about_y_matrix =
@@ -242,8 +240,8 @@ impl Application {
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(translation_matrix),
             ));
-            self.vertex_descriptors[0].uniforms[4]
-                .update(UniformPackedParam::Uniform1F(Uniform1FParam(mixvalue)));
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(mixvalue)));
 
             self.vertex_descriptors[0].render();
 
