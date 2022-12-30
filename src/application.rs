@@ -90,13 +90,6 @@ impl Application {
     }
 
     pub fn render_vaos(&mut self) {
-        let mut gradient1 = 0.0;
-        let mut gradient2 = 0.5;
-        let mut gradient3 = 1.0;
-        let mut sign1 = 1.0;
-        let mut sign2 = 1.0;
-        let mut sign3 = 1.0;
-
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
         let mut cur_off_z: f32 = 0.0;
@@ -132,8 +125,8 @@ impl Application {
             "Perspective projection matrix:\n{:?}",
             perspective_projection_matrix
         );
-        self.use_program_at_index(1);
-        self.vertex_descriptors[1].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
+        self.use_program_at_index(0);
+        self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
             Uniform4FVMatrix(perspective_projection_matrix),
         ));
 
@@ -166,44 +159,9 @@ impl Application {
                 );
             }
 
-            /*
-            if gradient1 <= 0.0 || gradient1 >= 1.0 {
-                sign1 *= -1.0;
-            }
-            if gradient2 <= 0.0 || gradient2 >= 1.0 {
-                sign2 *= -1.0;
-            }
-            if gradient3 <= 0.0 || gradient3 >= 1.0 {
-                sign3 *= -1.0;
-            }
-            //R: g3g2g1
-            //G: g1g3g2
-            //B: g1g2g3
-            gradient1 = gradient1 + (0.005 * sign1);
-            gradient2 = gradient2 + (0.005 * sign2);
-            gradient3 = gradient3 + (0.005 * sign3);
-
             self.use_program_at_index(0);
+
             self.vertex_descriptors[0].bind();
-
-            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::Uniform3F(
-                Uniform3FParam(gradient1, gradient3, gradient2),
-            ));
-            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::Uniform3F(
-                Uniform3FParam(gradient3, gradient2, gradient1),
-            ));
-            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::Uniform3F(
-                Uniform3FParam(gradient1, gradient2, gradient3),
-            ));
-            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::Uniform3F(
-                Uniform3FParam(gradient1, gradient3, gradient2),
-            ));
-
-            self.vertex_descriptors[0].render(); */
-
-            self.use_program_at_index(1);
-
-            self.vertex_descriptors[1].bind();
 
             if moving_in == true {
                 cur_off_z += 0.02;
@@ -262,8 +220,8 @@ impl Application {
             let translation_matrix =
                 Mat4::from_translation(Vec3::new(cur_off_x, cur_off_y, cur_off_z));
 
-            self.vertex_descriptors[1].textures[0].set_active_texture(0);
-            self.vertex_descriptors[1].textures[1].set_active_texture(1);
+            self.vertex_descriptors[0].textures[0].set_active_texture(0);
+            self.vertex_descriptors[0].textures[1].set_active_texture(1);
 
             if mixvalue_grow == true {
                 mixvalue += 0.02;
@@ -272,22 +230,22 @@ impl Application {
                 mixvalue -= 0.02;
             }
 
-            self.vertex_descriptors[1].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(rotate_about_x_matrix),
             ));
-            self.vertex_descriptors[1].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(rotate_about_y_matrix),
             ));
-            self.vertex_descriptors[1].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(rotate_about_z_matrix),
             ));
-            self.vertex_descriptors[1].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(translation_matrix),
             ));
-            self.vertex_descriptors[1].uniforms[4]
+            self.vertex_descriptors[0].uniforms[4]
                 .update(UniformPackedParam::Uniform1F(Uniform1FParam(mixvalue)));
 
-            self.vertex_descriptors[1].render();
+            self.vertex_descriptors[0].render();
 
             self.window.swap_buffers();
             self.glfw.poll_events();
