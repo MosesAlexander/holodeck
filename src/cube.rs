@@ -156,14 +156,3 @@ pub enum TextureCorner {
     TopLeft,
     TopRight,
 }
-
-
-#[test]
-fn test_generate_cube_corner_coords() {
-    let cube = Cube::new(0.1, (0.0, 0.0, 0.0));
-
-    assert_eq!([1.0,1.0,1.0], Cube::generate_cube_corner_coords((0.0,0.0,0.0), 2.0));
-}
-
-
-
