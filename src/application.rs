@@ -92,8 +92,8 @@ impl Application {
     pub fn render_vaos(&mut self) {
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
-        let mut cur_off_z: f32 = 0.0;
-        let mut mixvalue: f32 = 0.2;
+        let mut cur_off_z: f32 = -0.4;
+        let mut mixvalue: f32 = 0.5;
         let mut moving_up: bool = false;
         let mut moving_down: bool = false;
         let mut moving_left: bool = false;
