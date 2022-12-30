@@ -9,7 +9,7 @@ impl Cube {
     pub fn new(side_length: f32, center: (f32, f32, f32)) -> Cube {
         // Because of textures, each vertex needs 3 copies in the current format
         // so that each face can have a proper texture
-        let mut vertices_cube: Vec<f32> = Vec::new();
+        let mut vertices_cube: Vec<f32> = Vec::with_capacity((3 + 2) * 3 * 6);
 
         vertices_cube.extend_from_slice(&Cube::generate_cube_corner_coords(center, side_length, CubeCorner::COORDS_A));
         vertices_cube.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
