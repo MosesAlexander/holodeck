@@ -124,8 +124,8 @@ impl Application {
         /*
         let orthographic_projection_matrix = Mat4::orthographic_rh_gl(0.0, 800.0, 0.0, 600.0, 0.1, 100.0);
         println!("Orthographic projection matrix:\n{:?}", orthographic_projection_matrix);
-
         */
+
         let perspective_projection_matrix =
             Mat4::perspective_rh_gl(f32::to_radians(45.0), 800.0 / 600.0, 0.1, 100.0);
         println!(
@@ -166,6 +166,7 @@ impl Application {
                 );
             }
 
+            /*
             if gradient1 <= 0.0 || gradient1 >= 1.0 {
                 sign1 *= -1.0;
             }
@@ -198,7 +199,7 @@ impl Application {
                 Uniform3FParam(gradient1, gradient3, gradient2),
             ));
 
-            self.vertex_descriptors[0].render();
+            self.vertex_descriptors[0].render(); */
 
             self.use_program_at_index(1);
 
