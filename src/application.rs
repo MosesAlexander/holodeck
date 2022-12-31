@@ -3,7 +3,7 @@ extern crate glfw;
 use crate::uniform::*;
 
 use glam::*;
-use glfw::ffi::GLFWwindow;
+use glfw::ffi::{GLFWwindow, glfwGetTime};
 use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
 
 
@@ -114,11 +114,6 @@ impl Application {
         let mut mixvalue_grow = false;
         let mut mixvalue_shrink = false;
 
-        /*
-        let orthographic_projection_matrix = Mat4::orthographic_rh_gl(0.0, 800.0, 0.0, 600.0, 0.1, 100.0);
-        println!("Orthographic projection matrix:\n{:?}", orthographic_projection_matrix);
-        */
-
         let perspective_projection_matrix =
             Mat4::perspective_rh_gl(f32::to_radians(45.0), 800.0 / 600.0, 0.1, 100.0);
         println!(
@@ -228,24 +223,13 @@ impl Application {
                 mixvalue -= 0.02;
             }
 
-            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(rotate_about_x_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(rotate_about_y_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(rotate_about_z_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(translation_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
-                Uniform1FParam(mixvalue)));
+            let radius = 10.0;
+            let cam_x = (unsafe{glfwGetTime()} as f32).sin() * radius;
+            let cam_z = (unsafe{glfwGetTime()} as f32).cos() * radius;
 
             // Gram-Schmidt process
             // Positive Z axis leads outside the screen
-            let camera_position = Vec3::new(0.0, 0.0, 3.0);
+            let camera_position = Vec3::new(cam_x, 0.0, cam_z);
             // Camera direction
             let camera_target = Vec3::new(0.0, 0.0, 0.0);
             // For the view matrix's coordinate system we want its z-axis
@@ -261,12 +245,141 @@ impl Application {
             // get up axis by crossing camera direction with camera right
             let camera_up = camera_direction.cross(camera_right);
 
-            println!("pos: {:#?} up: {:#?} right: {:#?} direction: {:#?}",
-                        camera_position, camera_up, camera_right, camera_direction);
+            //println!("pos: {:#?} up: {:#?} right: {:#?} direction: {:#?}",
+            //            camera_position, camera_up, camera_right, camera_direction);
 
             // From these 3 vectors we can create a LookAt matrix
+            let mut mat_A = Mat4::from_cols(
+                                        Vec4::from((camera_right, 0.0)),
+                                        Vec4::from((camera_up, 0.0)),
+                                        Vec4::from((camera_direction,0.0)),
+                                        Vec4::W
+            );
+            mat_A = mat_A.transpose();
+
+            let mat_B = Mat4::from_cols(
+                                    Vec4::X,
+                                    Vec4::Y,
+                                    Vec4::Z,
+                                    Vec4::from((-camera_position, 1.0))
+
+            );
+
+            let LookAt = mat_A * mat_B;
+
+            self.vertex_descriptors[0].uniforms[6].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(LookAt)
+            ));
+
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(rotate_about_x_matrix),
+            ));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(rotate_about_y_matrix),
+            ));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(rotate_about_z_matrix),
+            ));
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(translation_matrix),
+            ));
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(mixvalue)));
+            
+            self.vertex_descriptors[0].render();
+            
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_x(std::f32::consts::PI * 0.0)
+            )));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_y(std::f32::consts::PI * 0.0)
+            )));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_z(std::f32::consts::PI * 0.0)
+            )));
+
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.2, 0.2, 0.2)
+            ))));
 
             self.vertex_descriptors[0].render();
+
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_x(std::f32::consts::PI * 1.0/2.0)
+            )));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_y(std::f32::consts::PI * 1.0/2.0)
+            )));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_z(std::f32::consts::PI * 1.0/2.0)
+            )));
+
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_translation(Vec3::new(-0.2, -0.2, -0.2)
+            ))));
+
+            self.vertex_descriptors[0].render();
+
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_x(std::f32::consts::PI * 1.0/4.0)
+            )));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_y(std::f32::consts::PI * 1.0/4.0)
+            )));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_z(std::f32::consts::PI * 1.0/4.0)
+            )));
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.5, 0.5, 0.5)))));
+
+            self.vertex_descriptors[0].render();
+
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_x(std::f32::consts::PI * 1.0/2.0)
+            )));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_y(std::f32::consts::PI * 1.0/4.0)
+            )));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_z(std::f32::consts::PI * 1.0/4.0)
+            )));
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_translation(Vec3::new(-0.5, -0.5, -0.5)))));
+
+            self.vertex_descriptors[0].render();
+
+
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_x(std::f32::consts::PI * 1.0/6.0)
+            )));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_y(std::f32::consts::PI * 1.0/6.0)
+            )));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_z(std::f32::consts::PI * 1.0/6.0)
+            )));
+
+
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.5, 0.5, -0.5)))));
+
+            self.vertex_descriptors[0].render();
+
+            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_x(std::f32::consts::PI * 1.0/8.0)
+            )));
+            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_y(std::f32::consts::PI * 1.0/8.0)
+            )));
+            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(Mat4::from_rotation_z(std::f32::consts::PI * 1.0/8.0)
+            )));
+
+            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+            Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.05, 0.05, -0.05)))));
+
+            self.vertex_descriptors[0].render();
+
 
             self.window.swap_buffers();
             self.glfw.poll_events();

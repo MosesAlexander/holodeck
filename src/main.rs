@@ -85,12 +85,15 @@ fn main() {
 
     let projection_uniform = UniformDescriptor::new(program_cube.id, "projection");
 
+    let camera_uniform = UniformDescriptor::new(program_cube.id, "look_at");
+
     cube_vert_desc.add_uniform(rotate_about_x_uniform);
     cube_vert_desc.add_uniform(rotate_about_y_uniform);
     cube_vert_desc.add_uniform(rotate_about_z_uniform);
     cube_vert_desc.add_uniform(translate_uniform);
     cube_vert_desc.add_uniform(mixvalue_uniform);
     cube_vert_desc.add_uniform(projection_uniform);
+    cube_vert_desc.add_uniform(camera_uniform);
 
     cube_vert_desc.add_texture(texture1_desc);
     cube_vert_desc.add_texture(texture2_desc);
