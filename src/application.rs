@@ -243,6 +243,29 @@ impl Application {
             self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
                 Uniform1FParam(mixvalue)));
 
+            // Gram-Schmidt process
+            // Positive Z axis leads outside the screen
+            let camera_position = Vec3::new(0.0, 0.0, 3.0);
+            // Camera direction
+            let camera_target = Vec3::new(0.0, 0.0, 0.0);
+            // For the view matrix's coordinate system we want its z-axis
+            // to be positive and because by convention (in OpenLG)
+            // the camera points towards the neg z-axis we want to negate
+            // the direciton vector.
+            // the name "direction vector" is a misnomer, since it is actually
+            // pointing in the reverse direction of what it is targeting
+            let camera_direction = (camera_position - camera_target).normalize();
+            // To get the right-axis do a cross product between up and target
+            let c_up = Vec3::new(0.0, 1.0, 0.0);
+            let camera_right = c_up.cross(camera_direction).normalize();
+            // get up axis by crossing camera direction with camera right
+            let camera_up = camera_direction.cross(camera_right);
+
+            println!("pos: {:#?} up: {:#?} right: {:#?} direction: {:#?}",
+                        camera_position, camera_up, camera_right, camera_direction);
+
+            // From these 3 vectors we can create a LookAt matrix
+
             self.vertex_descriptors[0].render();
 
             self.window.swap_buffers();
@@ -329,6 +352,7 @@ fn handle_window_event(
         glfw::WindowEvent::Key(Key::U, _, Action::Press, _) => {
             *x_rotate_ccwise = true;
         }
+
         glfw::WindowEvent::Key(Key::U, _, Action::Release, _) => {
             *x_rotate_ccwise = false;
         }
