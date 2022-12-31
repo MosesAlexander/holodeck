@@ -3,7 +3,7 @@ extern crate glfw;
 use crate::uniform::*;
 
 use glam::*;
-use glfw::ffi::{GLFWwindow, glfwGetTime};
+use glfw::ffi::{GLFWwindow, glfwGetTime, glfwSetInputMode, CURSOR, CURSOR_DISABLED, glfwSetCursorPosCallback, glfwGetCursorPos};
 use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
 
 
@@ -12,6 +12,7 @@ use std::sync::mpsc::Receiver;
 use crate::gl;
 use crate::vertex::VertexDescriptor;
 use crate::Program;
+use std::ffi::c_void;
 
 extern "C" fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height: i32) {
     unsafe {
@@ -93,6 +94,9 @@ impl Application {
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
         let mut cur_off_z: f32 = -0.4;
+        let mut camera_cur_off_x: f32 = 0.0;
+        let mut camera_cur_off_y: f32 = 0.0;
+        let mut camera_cur_off_z: f32 = 2.0;
         let mut mixvalue: f32 = 0.5;
         let mut moving_up: bool = false;
         let mut moving_down: bool = false;
@@ -100,6 +104,12 @@ impl Application {
         let mut moving_right: bool = false;
         let mut moving_in: bool = false;
         let mut moving_out: bool = false;
+        let mut camera_moving_up: bool = false;
+        let mut camera_moving_down: bool = false;
+        let mut camera_moving_left: bool = false;
+        let mut camera_moving_right: bool = false;
+        let mut camera_moving_forwards: bool = false;
+        let mut camera_moving_backwards: bool = false;
         let mut x_angle_multiplier: f32 = 0.0;
         let mut y_angle_multiplier: f32 = 0.0;
         let mut z_angle_multiplier: f32 = 0.0;
@@ -110,9 +120,16 @@ impl Application {
         let mut z_rot_cwise = false;
         let mut z_rot_ccwise = false;
         let mut reset_all_angles = false;
+        let mut yaw: f32 = -90.0;
+        let mut pitch: f32 = 0.0;
 
         let mut mixvalue_grow = false;
         let mut mixvalue_shrink = false;
+
+        let mut last_cursor_x: f64 = 400.0;
+        let mut last_cursor_y: f64 = 300.0;
+        let mut current_cursor_x: f64 = 0.0;
+        let mut current_cursor_y: f64 = 0.0;
 
         let perspective_projection_matrix =
             Mat4::perspective_rh_gl(f32::to_radians(45.0), 800.0 / 600.0, 0.1, 100.0);
@@ -128,6 +145,11 @@ impl Application {
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
         }
+
+        unsafe {
+            glfwSetInputMode(self.window.window_ptr(), CURSOR, CURSOR_DISABLED);
+        }
+
         while !self.window.should_close() {
             unsafe {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -151,6 +173,12 @@ impl Application {
                     &mut reset_all_angles,
                     &mut mixvalue_grow,
                     &mut mixvalue_shrink,
+                    &mut camera_moving_forwards,
+                    &mut camera_moving_backwards,
+                    &mut camera_moving_down,
+                    &mut camera_moving_up,
+                    &mut camera_moving_left,
+                    &mut camera_moving_right,
                 );
             }
 
@@ -223,15 +251,51 @@ impl Application {
                 mixvalue -= 0.02;
             }
 
-            let radius = 10.0;
-            let cam_x = (unsafe{glfwGetTime()} as f32).sin() * radius;
-            let cam_z = (unsafe{glfwGetTime()} as f32).cos() * radius;
+            if camera_moving_forwards == true {
+                camera_cur_off_z -= 0.02;
+            }
+            if camera_moving_backwards == true {
+                camera_cur_off_z += 0.02;
+            }
+            if camera_moving_down == true {
+                camera_cur_off_y -= 0.02;
+            }
+            if camera_moving_up == true {
+                camera_cur_off_y += 0.02;
+            }
+            if camera_moving_left == true {
+                camera_cur_off_x -= 0.02;
+            }
+            if camera_moving_right == true {
+                camera_cur_off_x += 0.02;
+            }
+
+
+            unsafe {
+                glfwGetCursorPos(self.window.window_ptr(), &mut current_cursor_x as *mut f64, &mut current_cursor_y as *mut f64);
+            }
+            let cursor_x_diff = last_cursor_x - current_cursor_x;
+            last_cursor_x = current_cursor_x;
+            let cursor_y_diff = last_cursor_y - current_cursor_y;
+            last_cursor_y = current_cursor_y;
+
+            yaw -= 0.03 * cursor_x_diff as f32;
+            pitch += 0.03 * cursor_y_diff as f32;
 
             // Gram-Schmidt process
             // Positive Z axis leads outside the screen
-            let camera_position = Vec3::new(cam_x, 0.0, cam_z);
+            let camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
+            // camera front
+            let mut camera_front = Vec3::new(0.0, 0.0, -1.0);
+
+            let mut direction = Vec3::new(0.0,0.0,0.0);
+            direction.x = yaw.to_radians().cos() * pitch.to_radians().cos();
+            direction.y = pitch.to_radians().sin();
+            direction.z = yaw.to_radians().sin() * pitch.to_radians().cos();
             // Camera direction
-            let camera_target = Vec3::new(0.0, 0.0, 0.0);
+
+            camera_front = direction;
+            let camera_target = camera_position + camera_front;
             // For the view matrix's coordinate system we want its z-axis
             // to be positive and because by convention (in OpenLG)
             // the camera points towards the neg z-axis we want to negate
@@ -239,6 +303,7 @@ impl Application {
             // the name "direction vector" is a misnomer, since it is actually
             // pointing in the reverse direction of what it is targeting
             let camera_direction = (camera_position - camera_target).normalize();
+            //let camera_direction = direction;
             // To get the right-axis do a cross product between up and target
             let c_up = Vec3::new(0.0, 1.0, 0.0);
             let camera_right = c_up.cross(camera_direction).normalize();
@@ -302,6 +367,9 @@ impl Application {
                 Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.2, 0.2, 0.2)
             ))));
 
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(0.5)));
+
             self.vertex_descriptors[0].render();
 
             self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
@@ -317,6 +385,8 @@ impl Application {
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(Mat4::from_translation(Vec3::new(-0.2, -0.2, -0.2)
             ))));
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(0.5)));
 
             self.vertex_descriptors[0].render();
 
@@ -331,6 +401,8 @@ impl Application {
             )));
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.5, 0.5, 0.5)))));
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(0.5)));
 
             self.vertex_descriptors[0].render();
 
@@ -345,6 +417,9 @@ impl Application {
             )));
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(Mat4::from_translation(Vec3::new(-0.5, -0.5, -0.5)))));
+
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(0.5)));
 
             self.vertex_descriptors[0].render();
 
@@ -363,6 +438,8 @@ impl Application {
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
                 Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.5, 0.5, -0.5)))));
 
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(0.5)));
             self.vertex_descriptors[0].render();
 
             self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
@@ -377,6 +454,8 @@ impl Application {
 
             self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
             Uniform4FVMatrix(Mat4::from_translation(Vec3::new(0.05, 0.05, -0.05)))));
+            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
+                Uniform1FParam(0.5)));
 
             self.vertex_descriptors[0].render();
 
@@ -409,6 +488,12 @@ fn handle_window_event(
     reset_all_angles: &mut bool,
     mixvalue_grow: &mut bool,
     mixvalue_shrink: &mut bool,
+    camera_moving_forwards: &mut bool,
+    camera_moving_backwards: &mut bool,
+    camera_moving_down: &mut bool,
+    camera_moving_up: &mut bool,
+    camera_moving_left: &mut bool,
+    camera_moving_right: &mut bool,
 ) {
     match event {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
@@ -417,6 +502,42 @@ fn handle_window_event(
         }
         glfw::WindowEvent::Key(Key::C, _, Action::Release, _) => {
             *moving_in = false;
+        }
+        glfw::WindowEvent::Key(Key::W, _, Action::Press, _) => {
+            *camera_moving_forwards = true;
+        }
+        glfw::WindowEvent::Key(Key::W, _, Action::Release, _) => {
+            *camera_moving_forwards = false;
+        }
+        glfw::WindowEvent::Key(Key::S, _, Action::Press, _) => {
+            *camera_moving_backwards = true;
+        }
+        glfw::WindowEvent::Key(Key::S, _, Action::Release, _) => {
+            *camera_moving_backwards = false;
+        }
+        glfw::WindowEvent::Key(Key::A, _, Action::Press, _) => {
+            *camera_moving_left = true;
+        }
+        glfw::WindowEvent::Key(Key::A, _, Action::Release, _) => {
+            *camera_moving_left = false;
+        }
+        glfw::WindowEvent::Key(Key::D, _, Action::Press, _) => {
+            *camera_moving_right = true;
+        }
+        glfw::WindowEvent::Key(Key::D, _, Action::Release, _) => {
+            *camera_moving_right = false;
+        }
+        glfw::WindowEvent::Key(Key::Q, _, Action::Press, _) => {
+            *camera_moving_down = true;
+        }
+        glfw::WindowEvent::Key(Key::Q, _, Action::Release, _) => {
+            *camera_moving_down = false;
+        }
+        glfw::WindowEvent::Key(Key::E, _, Action::Press, _) => {
+            *camera_moving_up = true;
+        }
+        glfw::WindowEvent::Key(Key::E, _, Action::Release, _) => {
+            *camera_moving_up = false;
         }
         glfw::WindowEvent::Key(Key::Z, _, Action::Press, _) => {
             *moving_out = true;
@@ -496,16 +617,16 @@ fn handle_window_event(
             *z_rotate_ccwise = false;
         }
 
-        glfw::WindowEvent::Key(Key::E, _, Action::Press, _) => {
+        glfw::WindowEvent::Key(Key::Num3, _, Action::Press, _) => {
             *mixvalue_grow = true;
         }
-        glfw::WindowEvent::Key(Key::E, _, Action::Release, _) => {
+        glfw::WindowEvent::Key(Key::Num3, _, Action::Release, _) => {
             *mixvalue_grow = false;
         }
-        glfw::WindowEvent::Key(Key::Q, _, Action::Press, _) => {
+        glfw::WindowEvent::Key(Key::Num1, _, Action::Press, _) => {
             *mixvalue_shrink = true;
         }
-        glfw::WindowEvent::Key(Key::Q, _, Action::Release, _) => {
+        glfw::WindowEvent::Key(Key::Num1, _, Action::Release, _) => {
             *mixvalue_shrink = false;
         }
 
