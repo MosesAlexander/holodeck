@@ -153,6 +153,9 @@ impl Application {
             Uniform4FVMatrix(perspective_projection_matrix),
         ));
 
+        // Initial position
+        let mut camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
+
         while !self.window.should_close() {
             unsafe {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -282,25 +285,6 @@ impl Application {
                 mixvalue -= 0.02;
             }
 
-            if camera_moving_forwards == true {
-                camera_cur_off_z -= 0.02;
-            }
-            if camera_moving_backwards == true {
-                camera_cur_off_z += 0.02;
-            }
-            if camera_moving_down == true {
-                camera_cur_off_y -= 0.02;
-            }
-            if camera_moving_up == true {
-                camera_cur_off_y += 0.02;
-            }
-            if camera_moving_left == true {
-                camera_cur_off_x -= 0.02;
-            }
-            if camera_moving_right == true {
-                camera_cur_off_x += 0.02;
-            }
-
 
             unsafe {
                 glfwGetCursorPos(self.window.window_ptr(), &mut current_cursor_x as *mut f64, &mut current_cursor_y as *mut f64);
@@ -312,18 +296,32 @@ impl Application {
 
             yaw -= 0.03 * cursor_x_diff as f32;
             pitch += 0.03 * cursor_y_diff as f32;
+            if pitch < -89.95 {
+                pitch = -89.95;
+            }
+
+            if pitch > 89.95 {
+                pitch = 89.95;
+            }
 
             // Gram-Schmidt process
             // Positive Z axis leads outside the screen
-            let camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
 
             let mut direction = Vec3::new(0.0,0.0,0.0);
             direction.x = yaw.to_radians().cos() * pitch.to_radians().cos();
             direction.y = pitch.to_radians().sin();
             direction.z = yaw.to_radians().sin() * pitch.to_radians().cos();
-            // Camera direction
 
             let camera_front = direction.normalize();
+
+            if camera_moving_forwards == true {
+                camera_position += camera_front*0.02;
+            }
+
+            if camera_moving_backwards == true {
+                camera_position -= camera_front*0.02;
+            }
+
             let camera_target = camera_position + camera_front;
             // For the view matrix's coordinate system we want its z-axis
             // to be positive and because by convention (in OpenLG)
@@ -339,8 +337,21 @@ impl Application {
             // get up axis by crossing camera direction with camera right
             let camera_up = camera_direction.cross(camera_right);
 
-            //println!("pos: {:#?} up: {:#?} right: {:#?} direction: {:#?}",
-            //            camera_position, camera_up, camera_right, camera_direction);
+            if camera_moving_left == true {
+                camera_position -= camera_right * 0.009;
+            }
+
+            if camera_moving_right == true {
+                camera_position += camera_right * 0.009;
+            }
+
+            if camera_moving_down == true {
+                camera_position.y -= 0.02;
+            }
+            if camera_moving_up == true {
+                camera_position.y += 0.02;
+            }
+
 
             // From these 3 vectors we can create a LookAt matrix
             let mut mat_A = Mat4::from_cols(
