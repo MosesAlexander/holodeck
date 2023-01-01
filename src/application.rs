@@ -122,6 +122,10 @@ impl Application {
         let mut reset_all_angles = false;
         let mut yaw: f32 = -90.0;
         let mut pitch: f32 = 0.0;
+        let mut zoom_in = false;
+        let mut zoom_out = false;
+        let mut reset_zoom = false;
+        let mut fov_val = 45.0;
 
         let mut mixvalue_grow = false;
         let mut mixvalue_shrink = false;
@@ -131,17 +135,6 @@ impl Application {
         let mut current_cursor_x: f64 = 0.0;
         let mut current_cursor_y: f64 = 0.0;
 
-        let perspective_projection_matrix =
-            Mat4::perspective_rh_gl(f32::to_radians(45.0), 800.0 / 600.0, 0.1, 100.0);
-        println!(
-            "Perspective projection matrix:\n{:?}",
-            perspective_projection_matrix
-        );
-        self.use_program_at_index(0);
-        self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
-            Uniform4FVMatrix(perspective_projection_matrix),
-        ));
-
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
         }
@@ -149,6 +142,16 @@ impl Application {
         unsafe {
             glfwSetInputMode(self.window.window_ptr(), CURSOR, CURSOR_DISABLED);
         }
+
+
+        self.use_program_at_index(0);
+
+        let perspective_projection_matrix =
+            Mat4::perspective_rh_gl(f32::to_radians(fov_val), 800.0 / 600.0, 0.1, 100.0);
+
+        self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
+            Uniform4FVMatrix(perspective_projection_matrix),
+        ));
 
         while !self.window.should_close() {
             unsafe {
@@ -179,6 +182,9 @@ impl Application {
                     &mut camera_moving_up,
                     &mut camera_moving_left,
                     &mut camera_moving_right,
+                    &mut zoom_in,
+                    &mut zoom_out,
+                    &mut reset_zoom,
                 );
             }
 
@@ -230,6 +236,31 @@ impl Application {
                 x_angle_multiplier = 0.0;
                 y_angle_multiplier = 0.0;
                 z_angle_multiplier = 0.0
+            }
+
+            if zoom_in == true {
+                if fov_val > 0.0 {
+                    fov_val -= 0.2;
+                }
+            } 
+
+            if zoom_out == true {
+                if fov_val < 360.0 {
+                    fov_val += 0.2;
+                }
+            }
+
+            if reset_zoom == true {
+                fov_val = 45.0;
+            }
+
+            if zoom_out == true || zoom_in == true || reset_zoom == true {
+                let perspective_projection_matrix =
+                    Mat4::perspective_rh_gl(f32::to_radians(fov_val), 800.0 / 600.0, 0.1, 100.0);
+
+                self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
+                    Uniform4FVMatrix(perspective_projection_matrix),
+                ));
             }
 
             let rotate_about_x_matrix =
@@ -285,8 +316,6 @@ impl Application {
             // Gram-Schmidt process
             // Positive Z axis leads outside the screen
             let camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
-            // camera front
-            let mut camera_front = Vec3::new(0.0, 0.0, -1.0);
 
             let mut direction = Vec3::new(0.0,0.0,0.0);
             direction.x = yaw.to_radians().cos() * pitch.to_radians().cos();
@@ -294,7 +323,7 @@ impl Application {
             direction.z = yaw.to_radians().sin() * pitch.to_radians().cos();
             // Camera direction
 
-            camera_front = direction;
+            let camera_front = direction.normalize();
             let camera_target = camera_position + camera_front;
             // For the view matrix's coordinate system we want its z-axis
             // to be positive and because by convention (in OpenLG)
@@ -494,6 +523,9 @@ fn handle_window_event(
     camera_moving_up: &mut bool,
     camera_moving_left: &mut bool,
     camera_moving_right: &mut bool,
+    zoom_in: &mut bool,
+    zoom_out: &mut bool,
+    reset_zoom: &mut bool,
 ) {
     match event {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
@@ -568,6 +600,25 @@ fn handle_window_event(
         }
         glfw::WindowEvent::Key(Key::Down, _, Action::Release, _) => {
             *moving_down = false;
+        }
+        
+        glfw::WindowEvent::Key(Key::KpAdd, _, Action::Press, _) => {
+            *zoom_in = true;
+        }
+        glfw::WindowEvent::Key(Key::KpAdd, _, Action::Release, _) => {
+            *zoom_in = false;
+        }
+        glfw::WindowEvent::Key(Key::KpSubtract, _, Action::Press, _) => {
+            *zoom_out = true;
+        }
+        glfw::WindowEvent::Key(Key::KpSubtract, _, Action::Release, _) => {
+            *zoom_out = false;
+        }
+        glfw::WindowEvent::Key(Key::KpMultiply, _, Action::Press, _) => {
+            *reset_zoom = true;
+        }
+        glfw::WindowEvent::Key(Key::KpMultiply, _, Action::Release, _) => {
+            *reset_zoom = false;
         }
 
         glfw::WindowEvent::Key(Key::T, _, Action::Press, _) => {
