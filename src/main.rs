@@ -150,7 +150,7 @@ fn main() {
     floor_vert_desc.set_attributes(floor_attr);
 
     let floor_texture_desc =
-        TextureDescriptor::new(program_floor.id, "texture1", "src/chessboard.gif", gl::RGB);
+        TextureDescriptor::new(program_floor.id, "texture1", "src/checkered.png", gl::RGB);
     
     let projection_uniform = UniformDescriptor::new(program_floor.id, "projection");
     let camera_uniform = UniformDescriptor::new(program_floor.id, "look_at");
