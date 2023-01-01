@@ -146,7 +146,7 @@ impl Application {
 
         self.use_program_at_index(0);
 
-        let perspective_projection_matrix =
+        let mut perspective_projection_matrix =
             Mat4::perspective_rh_gl(f32::to_radians(fov_val), 800.0 / 600.0, 0.1, 100.0);
 
         self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
@@ -258,7 +258,7 @@ impl Application {
             }
 
             if zoom_out == true || zoom_in == true || reset_zoom == true {
-                let perspective_projection_matrix =
+                perspective_projection_matrix =
                     Mat4::perspective_rh_gl(f32::to_radians(fov_val), 800.0 / 600.0, 0.1, 100.0);
 
                 self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
@@ -499,6 +499,18 @@ impl Application {
 
             self.vertex_descriptors[0].render();
 
+            self.use_program_at_index(1);
+            self.vertex_descriptors[1].textures[0].set_active_texture(0);
+            self.vertex_descriptors[1].bind();
+
+            self.vertex_descriptors[1].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(perspective_projection_matrix),
+            ));
+            self.vertex_descriptors[1].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(LookAt)
+            ));
+
+            self.vertex_descriptors[1].render();
 
             self.window.swap_buffers();
             self.glfw.poll_events();
