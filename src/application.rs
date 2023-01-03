@@ -3,7 +3,7 @@ extern crate glfw;
 use crate::uniform::*;
 
 use glam::*;
-use glfw::ffi::{GLFWwindow, glfwGetTime, glfwSetInputMode, CURSOR, CURSOR_DISABLED, glfwSetCursorPosCallback, glfwGetCursorPos};
+use glfw::ffi::{GLFWwindow, glfwSetInputMode, CURSOR, CURSOR_DISABLED, glfwGetCursorPos};
 use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
 
 
@@ -12,7 +12,11 @@ use std::sync::mpsc::Receiver;
 use crate::gl;
 use crate::vertex::VertexDescriptor;
 use crate::Program;
-use std::ffi::c_void;
+use std::ffi::{CString};
+use std::collections::HashMap;
+
+extern crate freetype;
+use freetype::freetype::{FT_Library, FT_Init_FreeType, FT_Face, FT_New_Face, FT_Set_Pixel_Sizes, FT_Load_Char, FT_LOAD_RENDER};
 
 extern "C" fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height: i32) {
     unsafe {
@@ -31,6 +35,14 @@ pub struct Application {
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
     vertex_descriptors: Vec<VertexDescriptor>,
+    characters: HashMap<char, Character>,
+}
+
+pub struct Character {
+    TextureID: u32,
+    size: Vec2,
+    Bearing: Vec2,
+    Advance: u32,
 }
 
 impl Application {
@@ -77,6 +89,7 @@ impl Application {
             window: window,
             events: events,
             vertex_descriptors: Vec::new(),
+            characters: HashMap::new(),
         }
     }
 
@@ -155,6 +168,40 @@ impl Application {
 
         // Initial position
         let mut camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
+
+
+        let mut ft: FT_Library = std::ptr::null_mut();
+        let mut face: FT_Face = std::ptr::null_mut();
+
+        unsafe {
+            let mut ret = FT_Init_FreeType(&mut ft as *mut FT_Library);
+            if ret != 0 {
+                eprintln!("ERROR_FREETYPE: Failed initializing FreeType library!");
+                std::process::exit(1);
+            }
+
+            ret = FT_New_Face(ft,
+                CString::new("/usr/share/fonts/TTF/Hack-Regular.ttf".to_string()).unwrap().as_ptr(),
+                0,
+                &mut face as *mut FT_Face
+            );
+            if ret != 0 {
+                eprintln!("ERROR::FREETYPE: Failed to load font");
+                std::process::exit(1);
+            }
+
+            ret = FT_Set_Pixel_Sizes(face, 0, 48);
+            if ret != 0 {
+                eprintln!("ERROR::FREETYPE: Error setting font size");
+                std::process::exit(1);
+            }
+
+            ret = FT_Load_Char(face, 'X' as u64, FT_LOAD_RENDER as i32);
+            if ret != 0 {
+                eprintln!("ERROR::FREETYPE: Error loading character");
+                std::process::exit(1);
+            }
+        }
 
         while !self.window.should_close() {
             unsafe {
