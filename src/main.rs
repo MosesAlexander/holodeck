@@ -164,5 +164,38 @@ fn main() {
 
     app.add_vertex_descriptor(floor_vert_desc);
 
+    let mut vert_shader_text = Shader::new("src/text.vert", VERTEX_SHADER);
+    let mut frag_shader_text = Shader::new("src/text.frag", FRAGMENT_SHADER);
+
+    match vert_shader_text.compile() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("ERROR: {}, exiting program", e);
+            std::process::exit(1);
+        }
+    }
+
+    match frag_shader_text.compile() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("ERROR: {}, exiting program", e);
+            std::process::exit(1);
+        }
+    }
+
+    let mut program_text = Program::new();
+
+    program_text.add_shader(&vert_shader_text);
+    program_text.add_shader(&frag_shader_text);
+    match program_cube.link_shaders() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("ERROR: {}, exiting program", e);
+            std::process::exit(1);
+        }
+    }
+
+    app.add_program(&program_text);
+
     app.render_vaos();
 }

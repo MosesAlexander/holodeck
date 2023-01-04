@@ -1,5 +1,6 @@
 extern crate glfw;
 
+use crate::gl::types::{GLint, GLuint};
 use crate::uniform::*;
 
 use glam::*;
@@ -12,11 +13,11 @@ use std::sync::mpsc::Receiver;
 use crate::gl;
 use crate::vertex::VertexDescriptor;
 use crate::Program;
-use std::ffi::{CString};
+use std::ffi::{CString, c_void};
 use std::collections::HashMap;
 
 extern crate freetype;
-use freetype::freetype::{FT_Library, FT_Init_FreeType, FT_Face, FT_New_Face, FT_Set_Pixel_Sizes, FT_Load_Char, FT_LOAD_RENDER};
+use freetype::freetype::{FT_Library, FT_Init_FreeType, FT_Face, FT_New_Face, FT_Set_Pixel_Sizes, FT_Load_Char, FT_LOAD_RENDER, FT_Done_Face, FT_Done_FreeType};
 
 extern "C" fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height: i32) {
     unsafe {
@@ -40,8 +41,8 @@ pub struct Application {
 
 pub struct Character {
     TextureID: u32,
-    size: Vec2,
-    Bearing: Vec2,
+    Size: IVec2,
+    Bearing: IVec2,
     Advance: u32,
 }
 
@@ -181,7 +182,7 @@ impl Application {
             }
 
             ret = FT_New_Face(ft,
-                CString::new("/usr/share/fonts/TTF/Hack-Regular.ttf".to_string()).unwrap().as_ptr(),
+                CString::new("/usr/share/fonts/truetype/hack/Hack-Regular.ttf".to_string()).unwrap().as_ptr(),
                 0,
                 &mut face as *mut FT_Face
             );
@@ -196,9 +197,63 @@ impl Application {
                 std::process::exit(1);
             }
 
-            ret = FT_Load_Char(face, 'X' as u64, FT_LOAD_RENDER as i32);
+            
+
+        }
+
+        // disable byte alignment restriction
+        unsafe {
+            gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1);
+        }
+
+        unsafe {
+            let mut ret;
+
+            for c in 0..128u8 {
+                ret = FT_Load_Char(face, c as u64, FT_LOAD_RENDER as i32);
+                if ret != 0 {
+                    eprintln!("ERROR::FREETYPE: Error loading character");
+                    std::process::exit(1);
+                }
+
+                let mut texture: GLuint = 0;
+                gl::GenTextures(1, &mut texture as *mut u32);
+                gl::BindTexture(gl::TEXTURE_2D, texture);
+                gl::TexImage2D(
+                    gl::TEXTURE_2D,
+                    0,
+                    gl::RED as i32,
+                    (*(*face).glyph).bitmap.width as i32,
+                   (*(*face).glyph).bitmap.rows as i32,
+                    0,
+                    gl::RED,
+                    gl::UNSIGNED_BYTE,
+                    (*(*face).glyph).bitmap.buffer as *const c_void
+                );
+
+                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
+                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
+                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+                let character = Character {
+                    TextureID: texture,
+                    Size: IVec2::new((*(*face).glyph).bitmap.width as i32, (*(*face).glyph).bitmap.rows as i32),
+                    Bearing: IVec2::new((*(*face).glyph).bitmap_left,  (*(*face).glyph).bitmap_top),
+                    Advance: (*(*face).glyph).advance.x as u32
+                };
+
+                self.characters.insert(c as char, character);
+            }
+
+            ret = FT_Done_Face(face);
             if ret != 0 {
-                eprintln!("ERROR::FREETYPE: Error loading character");
+                eprintln!("ERROR::FREETYPE: Error freeing Face resources");
+                std::process::exit(1);
+            }
+            ret = FT_Done_FreeType(ft);
+            if ret != 0 {
+                eprintln!("ERROR::FREETYPE: Error freeing FreeType resources");
                 std::process::exit(1);
             }
         }
