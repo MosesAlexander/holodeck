@@ -187,7 +187,7 @@ fn main() {
 
     program_text.add_shader(&vert_shader_text);
     program_text.add_shader(&frag_shader_text);
-    match program_cube.link_shaders() {
+    match program_text.link_shaders() {
         Ok(()) => {}
         Err(e) => {
             println!("ERROR: {}, exiting program", e);

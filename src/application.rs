@@ -10,7 +10,7 @@ use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
 
 use std::sync::mpsc::Receiver;
 
-use crate::gl;
+use crate::gl::{self, ARRAY_BUFFER};
 use crate::vertex::VertexDescriptor;
 use crate::Program;
 use std::ffi::{CString, c_void};
@@ -104,6 +104,65 @@ impl Application {
         }
     }
 
+    pub fn render_text(self: &Self, program_index: usize, textVAO: gl::types::GLuint, textVBO: gl::types::GLuint, text: String, mut x: f32, mut y: f32, scale: f32, color: Vec3) {
+        // Activate the text shader program
+        self.use_program_at_index(program_index);
+        let mut text_uniform = UniformDescriptor::new(
+            self.program_ids[program_index],
+            "textColor"
+        );
+        text_uniform.update(
+            UniformPackedParam::Uniform3F(
+                    Uniform3FParam(color.x, color.y, color.z)
+            )
+        );
+        unsafe {
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindVertexArray(textVAO);
+        }
+
+        for c in text.chars() {
+            let ch = self.characters.get(&c).unwrap();
+
+            let xpos = x + ch.Bearing.x as f32 * scale;
+            let ypos = y - (ch.Size.y - ch.Bearing.y) as f32 * scale;
+
+            let w = ch.Size.x as f32 * scale;
+            let h = ch.Size.y as f32 * scale;
+            // Update VBO for each character
+            let mut vertices: Vec<f32> = Vec::with_capacity(6 * 4);
+            vertices.extend_from_slice(&[xpos,     ypos + h, 0.0, 0.0]);
+            vertices.extend_from_slice(&[xpos,     ypos,     0.0, 1.0]);
+            vertices.extend_from_slice(&[xpos + w, ypos,     1.0, 1.0]);
+
+            vertices.extend_from_slice(&[xpos,     ypos + h, 0.0, 0.0]);
+            vertices.extend_from_slice(&[xpos + w, ypos,     1.0, 1.0]);
+            vertices.extend_from_slice(&[xpos + w, ypos + h, 1.0, 0.0]);
+
+            unsafe {
+                // render glyph texture over quad
+                gl::BindTexture(gl::TEXTURE_2D, ch.TextureID);
+                // Update the content of the VBO memory
+                gl::BindBuffer(gl::ARRAY_BUFFER, textVBO);
+                gl::BufferSubData(gl::ARRAY_BUFFER,
+                    0,
+                    vertices.len() as isize,
+                    vertices.as_ptr() as *const c_void
+                );
+                gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+                // render quad
+                gl::DrawArrays(gl::TRIANGLES, 0, 6);
+                // now advance cursors for next glyph(note that advance is number of 1/64 pixels)
+                x += (ch.Advance >> 6) as f32 * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+            }
+        }
+
+        unsafe {
+            gl::BindVertexArray(0);
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+        }
+    }
+
     pub fn render_vaos(&mut self) {
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
@@ -181,14 +240,17 @@ impl Application {
                 std::process::exit(1);
             }
 
-            ret = FT_New_Face(ft,
-                CString::new("/usr/share/fonts/truetype/hack/Hack-Regular.ttf".to_string()).unwrap().as_ptr(),
-                0,
-                &mut face as *mut FT_Face
-            );
-            if ret != 0 {
-                eprintln!("ERROR::FREETYPE: Failed to load font");
-                std::process::exit(1);
+            {
+                let font_path = CString::new("res/Hack-Regular.ttf").unwrap(); 
+                ret = FT_New_Face(ft,
+                    font_path.as_ptr(),
+                    0,
+                    &mut face as *mut FT_Face
+                );
+                if ret != 0 {
+                    eprintln!("ERROR::FREETYPE: Failed to load font");
+                    std::process::exit(1);
+                }
             }
 
             ret = FT_Set_Pixel_Sizes(face, 0, 48);
@@ -196,9 +258,6 @@ impl Application {
                 eprintln!("ERROR::FREETYPE: Error setting font size");
                 std::process::exit(1);
             }
-
-            
-
         }
 
         // disable byte alignment restriction
@@ -256,6 +315,49 @@ impl Application {
                 eprintln!("ERROR::FREETYPE: Error freeing FreeType resources");
                 std::process::exit(1);
             }
+        }
+
+        unsafe {
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        }
+
+        let text_projection: Mat4 = Mat4::orthographic_rh_gl(0.0, 800.0, 0.0, 600.0, -1.0, 1.0);
+
+        let mut text_proj_uniform = UniformDescriptor::new(
+            self.program_ids[2],
+            "projection"
+        );
+
+        text_proj_uniform.update(UniformPackedParam::UniformMatrix4FV(
+            Uniform4FVMatrix(text_projection),
+        ));
+
+        // For now we reserve enough memory when initiating the VBO so that we can later update the VBO's memory
+        // when rendering characters:
+        let mut textVAO: gl::types::GLuint = 0;
+        let mut textVBO: gl::types::GLuint = 0;
+        unsafe {
+            gl::GenVertexArrays(1, &mut textVAO);
+            gl::GenBuffers(1, &mut textVBO);
+            gl::BindVertexArray(textVAO);
+            gl::BindBuffer(gl::ARRAY_BUFFER, textVBO);
+            gl::BufferData(gl::ARRAY_BUFFER,
+                (std::mem::size_of::<f32>() * 6 * 4) as isize,
+                std::ptr::null(),
+                gl::DYNAMIC_DRAW
+            );
+            gl::EnableVertexAttribArray(0);
+            gl::VertexAttribPointer(
+                0,
+                4,
+                gl::FLOAT,
+                gl::FALSE,
+                (4 * std::mem::size_of::<f32>() * 4) as i32,
+                0 as *const gl::types::GLvoid
+            );
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+            gl::BindVertexArray(0);
         }
 
         while !self.window.should_close() {
@@ -613,6 +715,8 @@ impl Application {
             ));
 
             self.vertex_descriptors[1].render();
+
+            self.render_text(2, textVAO, textVBO, "Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
 
             self.window.swap_buffers();
             self.glfw.poll_events();

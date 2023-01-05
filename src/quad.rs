@@ -13,16 +13,17 @@ impl Quad {
         let mut vertices_quad: Vec<f32> = Vec::new();
         let mut indices_quad: Vec<u32> = Vec::new();
 
-        vertices_quad.extend_from_slice(&[20.0, normal.1, 20.0]);
-        vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
         vertices_quad.extend_from_slice(&[0.0, normal.1, 0.0]);
         vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft));
         vertices_quad.extend_from_slice(&[20.0, normal.1, 0.0]);
-        vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
-        vertices_quad.extend_from_slice(&[0.0, normal.1, 20.0]);
         vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight));
+        vertices_quad.extend_from_slice(&[0.0, normal.1, 20.0]);
+        vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft));
+        vertices_quad.extend_from_slice(&[20.0, normal.1, 20.0]);
+        vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight));
 
-        indices_quad.extend_from_slice(&[0,2,1, 0,1,3 ]);
+        
+        indices_quad.extend_from_slice(&[0,1,2, 1,3,2 ]);
 
         Quad { vertices: vertices_quad, indices: indices_quad, center: center}
     }
