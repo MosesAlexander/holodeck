@@ -146,7 +146,7 @@ impl Application {
                 gl::BindBuffer(gl::ARRAY_BUFFER, textVBO);
                 gl::BufferSubData(gl::ARRAY_BUFFER,
                     0,
-                    vertices.len() as isize,
+                    (vertices.len() * std::mem::size_of::<f32>()) as isize,
                     vertices.as_ptr() as *const c_void
                 );
                 gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -329,6 +329,8 @@ impl Application {
             "projection"
         );
 
+        self.use_program_at_index(2);
+
         text_proj_uniform.update(UniformPackedParam::UniformMatrix4FV(
             Uniform4FVMatrix(text_projection),
         ));
@@ -353,7 +355,7 @@ impl Application {
                 4,
                 gl::FLOAT,
                 gl::FALSE,
-                (4 * std::mem::size_of::<f32>() * 4) as i32,
+                (4 * std::mem::size_of::<f32>()) as i32,
                 0 as *const gl::types::GLvoid
             );
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
