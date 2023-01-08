@@ -740,6 +740,55 @@ impl Application {
 
             self.render_text(2, textVAO, textVBO, "Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
 
+            self.use_program_at_index(1);
+            self.vertex_descriptors[2].textures[0].set_active_texture(0);
+            self.vertex_descriptors[2].bind();
+
+            self.vertex_descriptors[2].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(perspective_projection_matrix),
+            ));
+            self.vertex_descriptors[2].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(LookAt)
+            ));
+
+            self.vertex_descriptors[2].render();
+
+            self.vertex_descriptors[3].textures[0].set_active_texture(0);
+            self.vertex_descriptors[3].bind();
+
+            self.vertex_descriptors[3].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(perspective_projection_matrix),
+            ));
+            self.vertex_descriptors[3].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(LookAt)
+            ));
+
+            self.vertex_descriptors[3].render();
+
+            self.vertex_descriptors[4].textures[0].set_active_texture(0);
+            self.vertex_descriptors[4].bind();
+
+            self.vertex_descriptors[4].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(perspective_projection_matrix),
+            ));
+            self.vertex_descriptors[4].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(LookAt)
+            ));
+
+            self.vertex_descriptors[4].render();
+
+            self.vertex_descriptors[5].textures[0].set_active_texture(0);
+            self.vertex_descriptors[5].bind();
+
+            self.vertex_descriptors[5].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(perspective_projection_matrix),
+            ));
+            self.vertex_descriptors[5].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                Uniform4FVMatrix(LookAt)
+            ));
+
+            self.vertex_descriptors[5].render();
+
             self.window.swap_buffers();
             self.glfw.poll_events();
         }

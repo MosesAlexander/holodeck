@@ -9,7 +9,7 @@ pub struct Quad {
 
 impl Quad {
     // TODO: get plane given center_offset vector, for now just put plane on XZ using Y component from center_offset
-    pub fn new(width: f32, height: f32, center_offset: (f32, f32, f32), center: (f32, f32, f32), texture_scale_factor: f32) -> Quad {
+    pub fn new(width: f32, height: f32, center_offset: (f32, f32, f32), center: (f32, f32, f32), texture_scale_factor: (f32, f32)) -> Quad {
         let mut vertices_quad: Vec<f32> = Vec::new();
         let mut indices_quad: Vec<u32> = Vec::new();
 
@@ -18,9 +18,9 @@ impl Quad {
                 vertices_quad.extend_from_slice(&[x, 0.0, -width / 2.0]);
                 vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomLeft, texture_scale_factor));
                 vertices_quad.extend_from_slice(&[x, height,  -width / 2.0]);
-                vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight, texture_scale_factor));
-                vertices_quad.extend_from_slice(&[x, 0.0,  width / 2.0]);
                 vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopLeft, texture_scale_factor));
+                vertices_quad.extend_from_slice(&[x, 0.0,  width / 2.0]);
+                vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::BottomRight, texture_scale_factor));
                 vertices_quad.extend_from_slice(&[x,  height,  width / 2.0]);
                 vertices_quad.extend_from_slice(&Cube::generate_texture_coords(TextureCorner::TopRight, texture_scale_factor));
 
