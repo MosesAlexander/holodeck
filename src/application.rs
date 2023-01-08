@@ -56,7 +56,7 @@ impl Application {
         ));
 
         let (mut window, events) = glfw
-            .create_window(800, 600, "MyOpenGL", glfw::WindowMode::Windowed)
+            .create_window(1024, 768, "MyOpenGL", glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
         window.set_key_polling(true);
@@ -71,7 +71,7 @@ impl Application {
         gl::Viewport::load_with(|s| window.get_proc_address(s) as *const _);
 
         unsafe {
-            gl::Viewport(0, 0, 800, 600);
+            gl::Viewport(0, 0, 1024, 768);
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
         }
 
@@ -167,9 +167,9 @@ impl Application {
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
         let mut cur_off_z: f32 = -0.4;
-        let mut camera_cur_off_x: f32 = 0.0;
-        let mut camera_cur_off_y: f32 = 0.0;
-        let mut camera_cur_off_z: f32 = 2.0;
+        let camera_cur_off_x: f32 = 0.0;
+        let camera_cur_off_y: f32 = 0.2;
+        let camera_cur_off_z: f32 = 2.0;
         let mut mixvalue: f32 = 0.5;
         let mut moving_up: bool = false;
         let mut moving_down: bool = false;
@@ -220,7 +220,7 @@ impl Application {
         self.use_program_at_index(0);
 
         let mut perspective_projection_matrix =
-            Mat4::perspective_rh_gl(f32::to_radians(fov_val), 800.0 / 600.0, 0.1, 100.0);
+            Mat4::perspective_rh_gl(f32::to_radians(fov_val), 1024.0 / 768.0, 0.1, 100.0);
 
         self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
             Uniform4FVMatrix(perspective_projection_matrix),
@@ -322,7 +322,7 @@ impl Application {
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         }
 
-        let text_projection: Mat4 = Mat4::orthographic_rh_gl(0.0, 800.0, 0.0, 600.0, -1.0, 1.0);
+        let text_projection: Mat4 = Mat4::orthographic_rh_gl(0.0, 1024.0, 0.0, 768.0, -1.0, 1.0);
 
         let mut text_proj_uniform = UniformDescriptor::new(
             self.program_ids[2],
@@ -465,7 +465,10 @@ impl Application {
 
             if zoom_out == true || zoom_in == true || reset_zoom == true {
                 perspective_projection_matrix =
-                    Mat4::perspective_rh_gl(f32::to_radians(fov_val), 800.0 / 600.0, 0.1, 100.0);
+                    Mat4::perspective_rh_gl(f32::to_radians(fov_val), 1024.0 / 768.0, 0.1, 100.0);
+
+                #[cfg(feature = "printdebugs")]
+                println!("zoom_in/out_perspective: {:?}", perspective_projection_matrix);
 
                 self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
                     Uniform4FVMatrix(perspective_projection_matrix),
@@ -510,6 +513,13 @@ impl Application {
                 pitch = 89.95;
             }
 
+            #[cfg(feature = "printdebugs")]
+            println!("cur_x: {} cur_y: {} last_x: {} last_y: {} diff_x: {} diff_y: {}",
+                    current_cursor_x, current_cursor_y, last_cursor_x, last_cursor_y, cursor_x_diff,
+                    cursor_y_diff);
+            #[cfg(feature = "printdebugs")]
+            println!("yaw: {} pitch: {}", yaw, pitch);
+
             // Gram-Schmidt process
             // Positive Z axis leads outside the screen
 
@@ -527,6 +537,8 @@ impl Application {
             if camera_moving_backwards == true {
                 camera_position -= camera_front*0.02;
             }
+
+            camera_position.y = 0.2;
 
             let camera_target = camera_position + camera_front;
             // For the view matrix's coordinate system we want its z-axis
@@ -553,10 +565,18 @@ impl Application {
 
             if camera_moving_down == true {
                 camera_position.y -= 0.02;
+                if camera_position.y < 0.2 {
+                    camera_position.y = 0.2;
+                }
             }
+
             if camera_moving_up == true {
                 camera_position.y += 0.02;
             }
+
+
+            #[cfg(feature = "printdebugs")]
+            println!("camera_position: {:?}", camera_position);
 
 
             // From these 3 vectors we can create a LookAt matrix

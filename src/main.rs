@@ -137,7 +137,7 @@ fn main() {
     app.add_program(&program_floor);
 
 
-    let floor = Quad::new(10.0, 10.0, (0.0, 0.0, 0.0), (0.0,0.0,0.0));
+    let floor = Quad::new(10.0, 0.0, (0.0, 0.000001, 0.0), (0.0,0.0,0.0), 10.0);
     let floor_buffer = BufferDescriptor::new(floor.vertices, floor.center);
     let mut floor_vert_desc = VertexDescriptor::new(floor_buffer);
     let floor_attr = AtrributesDescriptor {
@@ -150,7 +150,7 @@ fn main() {
     floor_vert_desc.set_attributes(floor_attr);
 
     let floor_texture_desc =
-        TextureDescriptor::new(program_floor.id, "texture1", "src/checkered.png", gl::RGB);
+        TextureDescriptor::new(program_floor.id, "texture1", "src/concrete_floor.jpg", gl::RGB);
     
     let projection_uniform = UniformDescriptor::new(program_floor.id, "projection");
     let camera_uniform = UniformDescriptor::new(program_floor.id, "look_at");
@@ -161,6 +161,8 @@ fn main() {
     floor_vert_desc.add_texture(floor_texture_desc);
 
     floor_vert_desc.set_indexed_drawing(floor.indices);
+
+    //let wall1
 
     app.add_vertex_descriptor(floor_vert_desc);
 
