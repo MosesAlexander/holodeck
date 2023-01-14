@@ -15,7 +15,7 @@ use program::Program;
 use shader::Shader;
 use texture::TextureDescriptor;
 use uniform::*;
-use vertex::{AtrributesDescriptor, VertexDescriptor};
+use vertex::{AttributesDescriptor, VertexDescriptor};
 use quad::*;
 
 mod gl {
@@ -60,9 +60,9 @@ fn main() {
     app.add_program(&program_cube);
 
     let cube = Cube::new(0.1, (0.0, 0.0, 0.0));
-    let buffer2 = BufferDescriptor::new(cube.vertices);
+    let buffer2 = BufferDescriptor::new(&cube.vertices);
     let mut cube_vert_desc = VertexDescriptor::new(buffer2);
-    let cube_attr = AtrributesDescriptor {
+    let cube_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
@@ -138,9 +138,9 @@ fn main() {
 
 
     let floor = Quad::new(10.0, 0.0, (0.0, 0.000001, 0.0), (0.0,0.0,0.0), (10.0, 10.0));
-    let floor_buffer = BufferDescriptor::new(floor.vertices);
+    let floor_buffer = BufferDescriptor::new(&floor.vertices);
     let mut floor_vert_desc = VertexDescriptor::new(floor_buffer);
-    let floor_attr = AtrributesDescriptor {
+    let floor_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
@@ -198,9 +198,9 @@ fn main() {
     app.add_program(&program_text);
 
     let wall1 = Quad::new(2.5, 0.6, (0.0, 0.0, 2.5), (0.0,0.0,2.5), (2.0, 1.0));
-    let wall1_buffer = BufferDescriptor::new(wall1.vertices);
+    let wall1_buffer = BufferDescriptor::new(&wall1.vertices);
     let mut wall1_vert_desc = VertexDescriptor::new(wall1_buffer);
-    let wall1_attr = AtrributesDescriptor {
+    let wall1_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
@@ -225,9 +225,9 @@ fn main() {
     app.add_vertex_descriptor(wall1_vert_desc);
 
     let wall2 = Quad::new(2.5, 0.6, (0.0, 0.0, -2.5), (0.0,0.0,-2.5), (2.0, 1.0));
-    let wall2_buffer = BufferDescriptor::new(wall2.vertices);
+    let wall2_buffer = BufferDescriptor::new(&wall2.vertices);
     let mut wall2_vert_desc = VertexDescriptor::new(wall2_buffer);
-    let wall2_attr = AtrributesDescriptor {
+    let wall2_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
@@ -252,9 +252,9 @@ fn main() {
     app.add_vertex_descriptor(wall2_vert_desc);
 
     let wall3 = Quad::new(5.0, 0.6, (1.25, 0.0, 0.0), (1.25,0.0,0.0), (2.0, 1.0));
-    let wall3_buffer = BufferDescriptor::new(wall3.vertices);
+    let wall3_buffer = BufferDescriptor::new(&wall3.vertices);
     let mut wall3_vert_desc = VertexDescriptor::new(wall3_buffer);
-    let wall3_attr = AtrributesDescriptor {
+    let wall3_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],
@@ -279,9 +279,9 @@ fn main() {
     app.add_vertex_descriptor(wall3_vert_desc);
 
     let wall4 = Quad::new(5.0, 0.6, (-1.25, 0.0, 0.0), (-1.25,0.0,0.0), (2.0,1.0));
-    let wall4_buffer = BufferDescriptor::new(wall4.vertices);
+    let wall4_buffer = BufferDescriptor::new(&wall4.vertices);
     let mut wall4_vert_desc = VertexDescriptor::new(wall4_buffer);
-    let wall4_attr = AtrributesDescriptor {
+    let wall4_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
         component_types: vec![gl::FLOAT, gl::FLOAT, gl::FLOAT],

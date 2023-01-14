@@ -4,28 +4,62 @@ use crate::texture::TextureDescriptor;
 use crate::uniform::UniformDescriptor;
 use glam::*;
 
+// Each model can have several sub-models/shapes
+// that it consists of
 pub struct Model {
     pub meshes: Vec<Mesh>,
 }
 
+// Models can be made up of multiple meshes
+impl Model {
+    pub fn new() -> Model {
+        Model { meshes: Vec::new() }
+    }
+
+    pub fn add_mesh(&mut self, mesh: Mesh) {
+        self.meshes.push(mesh);
+    }
+
+    pub fn import_mesh_from_file() {
+
+    }
+}
+
+// Represents a basic shape a model is made of
 pub struct Mesh {
-    pub vertices: Vec<Vertex>,
-    pub faces: Vec<Face>,
+    pub vertices: Vec<f32>,
+    pub face_indices: Vec<i32>,
     pub textures: Vec<Texture>,
     pub uniforms: Vec<UniformDescriptor>,
     buffer: BufferDescriptor,
-    vao: gl::types::GLuint,
+    vao: VaoDescriptor,
     ebo: gl::types::GLuint,
+}
+
+impl Mesh {
+    pub fn new(vertices: Vec<f32>, indices: Vec<i32>, attributes: AttributesDescriptor) -> Mesh {
+        let buffer = BufferDescriptor::new(&vertices);
+        let vao = VaoDescriptor::new(attributes);
+
+        Mesh {
+            buffer: buffer,
+            vertices: vertices,
+            face_indices: indices,
+            textures: Vec::new(),
+            uniforms: Vec::new(),
+            vao: vao,
+            ebo: 0, 
+        }
+    }
+
 }
 
 pub struct Texture;
 
-pub struct Face;
-
 pub struct Vertex {
-    position: Vec3,
-    normal: Vec3,
-    texture_coords: Vec2,
+    position: (f32, f32, f32),
+    normal: (f32, f32, f32),
+    texture_coords: (f32, f32),
 }
 
 pub struct VertexDescriptor {
@@ -42,7 +76,7 @@ pub struct VertexDescriptor {
  * component_groups: Groups of components vertices are made out of
  * component_nums:   Number of components for each group, i.e. 3 position, 3 color, 2 texture,
  */
-pub struct AtrributesDescriptor {
+pub struct AttributesDescriptor {
     pub component_groups: gl::types::GLuint,
     pub component_nums: Vec<gl::types::GLint>,
     pub component_types: Vec<gl::types::GLenum>,
@@ -91,7 +125,7 @@ impl VertexDescriptor {
         }
     }
 
-    pub fn set_attributes(&mut self, attributes: AtrributesDescriptor) -> Result<(), String> {
+    pub fn set_attributes(&mut self, attributes: AttributesDescriptor) -> Result<(), String> {
         self.bind();
         self.buffer.bind();
 

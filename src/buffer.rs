@@ -1,11 +1,14 @@
 use crate::gl;
+use crate::vertex::*;
 
 pub struct BufferDescriptor {
     buffer_id: gl::types::GLuint,
 }
 
+
+
 impl BufferDescriptor {
-    pub fn new(vertices: Vec<f32>) -> BufferDescriptor {
+    pub fn new(vertices: &Vec<f32>) -> BufferDescriptor {
         let mut buffer_id = 0;
 
         unsafe {
@@ -34,4 +37,66 @@ impl BufferDescriptor {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.buffer_id);
         }
     }
+}
+
+pub struct VaoDescriptor {
+    vao_id: gl::types::GLuint,
+}
+
+impl VaoDescriptor {
+    pub fn new(attr: AttributesDescriptor) -> VaoDescriptor {
+        let mut vao_id = 0;
+
+        unsafe {
+            gl::GenVertexArrays(1, &mut vao_id);
+        }
+
+        VaoDescriptor { vao_id: vao_id }
+    }
+
+    pub fn bind(&self) {
+        unsafe {
+            gl::BindVertexArray(self.vao_id);
+        }
+    }
+
+    pub fn set_attributes(&mut self, attributes: AttributesDescriptor) -> Result<(), String> {
+        self.bind();
+        self.buffer.bind();
+
+        for attr_idx in 0..attributes.component_groups {
+            unsafe {
+                gl::VertexAttribPointer(
+                    attr_idx,
+                    attributes.component_nums[attr_idx as usize],
+                    attributes.component_types[attr_idx as usize],
+                    gl::FALSE,
+                    match attributes.component_types[attr_idx as usize] {
+                        gl::FLOAT => {
+                            (attributes.component_strides[attr_idx as usize] as usize
+                                * std::mem::size_of::<f32>())
+                                as gl::types::GLint
+                        }
+                        gl::UNSIGNED_INT => {
+                            (attributes.component_strides[attr_idx as usize] as usize
+                                * std::mem::size_of::<u32>())
+                                as gl::types::GLint
+                        }
+                        _ => {
+                            return Err(format!(
+                                "Invalid component type! {}",
+                                attributes.component_types[attr_idx as usize]
+                            ));
+                        }
+                    },
+                    (attributes.component_offsets[attr_idx as usize] * std::mem::size_of::<f32>())
+                        as *const gl::types::GLvoid,
+                );
+                gl::EnableVertexAttribArray(attr_idx);
+            }
+        }
+        Ok(())
+    }
+
+
 }
