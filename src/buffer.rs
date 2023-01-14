@@ -2,11 +2,10 @@ use crate::gl;
 
 pub struct BufferDescriptor {
     buffer_id: gl::types::GLuint,
-    position_in_world: (f32, f32, f32),
 }
 
 impl BufferDescriptor {
-    pub fn new(vertices: Vec<f32>, position_in_world: (f32, f32, f32)) -> BufferDescriptor {
+    pub fn new(vertices: Vec<f32>) -> BufferDescriptor {
         let mut buffer_id = 0;
 
         unsafe {
@@ -14,7 +13,6 @@ impl BufferDescriptor {
         }
         let buffer = BufferDescriptor {
             buffer_id: buffer_id,
-            position_in_world: position_in_world,
         };
 
         buffer.bind();
