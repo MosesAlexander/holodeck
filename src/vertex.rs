@@ -2,6 +2,31 @@ use crate::buffer::*;
 use crate::gl;
 use crate::texture::TextureDescriptor;
 use crate::uniform::UniformDescriptor;
+use glam::*;
+
+pub struct Model {
+    pub meshes: Vec<Mesh>,
+}
+
+pub struct Mesh {
+    pub vertices: Vec<Vertex>,
+    pub faces: Vec<Face>,
+    pub textures: Vec<Texture>,
+    pub uniforms: Vec<UniformDescriptor>,
+    buffer: BufferDescriptor,
+    vao: gl::types::GLuint,
+    ebo: gl::types::GLuint,
+}
+
+pub struct Texture;
+
+pub struct Face;
+
+pub struct Vertex {
+    position: Vec3,
+    normal: Vec3,
+    texture_coords: Vec2,
+}
 
 pub struct VertexDescriptor {
     buffer: BufferDescriptor,
