@@ -88,7 +88,12 @@ impl VaoDescriptor {
         buffer_ref.bind();
         let mut vao = VaoDescriptor { vao_id: vao_id, buffer_ref: buffer_ref, ebo: None};
         vao.bind();
-        vao.set_attributes(attr);
+        match vao.set_attributes(attr) {
+            Ok(()) => {},
+            Err(e) => {
+                eprintln!("Failure to set attributes to Vao! Error: {}", e);
+            }
+        };
         vao
     }
 

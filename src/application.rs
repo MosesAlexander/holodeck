@@ -11,7 +11,7 @@ use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
 use std::sync::mpsc::Receiver;
 
 use crate::gl::{self};
-use crate::vertex::{VertexDescriptor, Model};
+use crate::vertex::{Model};
 use crate::Program;
 
 extern crate freetype;
@@ -26,14 +26,10 @@ pub const VERTEX_SHADER: gl::types::GLenum = gl::VERTEX_SHADER;
 pub const FRAGMENT_SHADER: gl::types::GLenum = gl::FRAGMENT_SHADER;
 
 pub struct Application {
-    program_ids: Vec<gl::types::GLuint>,
-    vaos: Vec<gl::types::GLuint>,
-    textures: Vec<gl::types::GLuint>,
     models: Vec<Model>,
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
-    vertex_descriptors: Vec<VertexDescriptor>,
     text_manager: Option<TextManager>,
 }
 
@@ -74,32 +70,17 @@ impl Application {
         }
 
         Application {
-            program_ids: Vec::new(),
             models: Vec::new(),
-            vaos: Vec::new(),
-            textures: Vec::new(),
             glfw: glfw,
             window: window,
             events: events,
-            vertex_descriptors: Vec::new(),
             text_manager: None,
         }
-    }
-
-    pub fn add_program(&mut self, program: &Program) {
-        self.program_ids.push(program.id);
     }
 
     pub fn attach_text_manager(&mut self, text_manager: TextManager) {
         self.text_manager = Some(text_manager);
     }
-
-    pub fn use_program_at_index(&self, idx: usize) {
-        unsafe {
-            gl::UseProgram(self.program_ids[idx]);
-        }
-    }
-
 
     pub fn render_models(&mut self) {
         let mut cur_off_x: f32 = 0.0;
@@ -428,7 +409,6 @@ impl Application {
                 mesh.bind_vao();
                 mesh.render();
             }
-            //self.models[0].render();
 
             for model in self.models[1..].iter_mut() {
                 model.use_program();
@@ -453,10 +433,6 @@ impl Application {
             self.window.swap_buffers();
             self.glfw.poll_events();
         }
-    }
-
-    pub fn add_vertex_descriptor(&mut self, descriptor: VertexDescriptor) {
-        self.vertex_descriptors.push(descriptor);
     }
 
     pub fn add_model(&mut self, model: Model) {
