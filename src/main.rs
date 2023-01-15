@@ -103,6 +103,7 @@ fn main() {
     let mut cube_model = Model::new();
     cube_model.add_mesh(cube_mesh);
     cube_model.attach_program(Rc::new(program_cube));
+    app.add_model(cube_model);
 
     let mut vert_shader_floor = Shader::new("src/floor.vert", VERTEX_SHADER);
     let mut frag_shader_floor = Shader::new("src/floor.frag", FRAGMENT_SHADER);
@@ -161,6 +162,9 @@ fn main() {
 
     let program_floor_ref = Rc::new(program_floor);
     let program_wall1 = Rc::clone(&program_floor_ref);
+    let program_wall2 = Rc::clone(&program_floor_ref);
+    let program_wall3 = Rc::clone(&program_floor_ref);
+    let program_wall4 = Rc::clone(&program_floor_ref);
     floor_model.attach_program(Rc::clone(&program_floor_ref));
 
     app.add_model(floor_model);
@@ -223,7 +227,6 @@ fn main() {
 
     let mut wall1_model = Model::new();
     wall1_model.add_mesh(wall1_mesh);
-    let program_wall2 = program_wall1.clone();
     wall1_model.attach_program(program_wall1);
 
     app.add_model(wall1_model);
@@ -252,7 +255,6 @@ fn main() {
 
     let mut wall2_model = Model::new();
     wall2_model.add_mesh(wall2_mesh);
-    let program_wall3 = program_wall2.clone();
     wall2_model.attach_program(program_wall2);
 
     app.add_model(wall2_model);
@@ -280,7 +282,6 @@ fn main() {
 
     let mut wall3_model = Model::new();
     wall3_model.add_mesh(wall3_mesh);
-    let program_wall4 = program_wall3.clone();
     wall3_model.attach_program(program_wall3);
 
     app.add_model(wall3_model);
@@ -313,7 +314,6 @@ fn main() {
     wall4_model.attach_program(program_wall4);
 
     app.add_model(wall4_model);
-
 
     app.render_models();
 }

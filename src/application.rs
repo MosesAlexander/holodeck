@@ -154,16 +154,14 @@ impl Application {
             glfwSetInputMode(self.window.window_ptr(), CURSOR, CURSOR_DISABLED);
         }
 
-        self.use_program_at_index(0);
+        self.models[0].use_program();
 
         let mut perspective_projection_matrix =
             Mat4::perspective_rh_gl(f32::to_radians(fov_val), 1024.0 / 768.0, 0.1, 100.0);
 
-        /*
-        mesh.uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
+        self.models[0].meshes[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
             Uniform4FVMatrix(perspective_projection_matrix),
         ));
-        */
 
         // Initial position
         let mut camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
