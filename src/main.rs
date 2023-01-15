@@ -316,5 +316,5 @@ fn main() {
     app.add_model(wall4_model);
 
 
-    app.render_vaos();
+    app.render_models();
 }

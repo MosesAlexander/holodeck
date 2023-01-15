@@ -13,7 +13,6 @@ use std::sync::mpsc::Receiver;
 use crate::gl::{self};
 use crate::vertex::{VertexDescriptor, Model};
 use crate::Program;
-use std::ffi::{CString, c_void};
 
 extern crate freetype;
 
@@ -48,7 +47,7 @@ impl Application {
         ));
 
         let (mut window, events) = glfw
-            .create_window(1024, 768, "MyOpenGL", glfw::WindowMode::Windowed)
+            .create_window(1024, 768, "rust-opengl", glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
         window.set_key_polling(true);
@@ -102,7 +101,7 @@ impl Application {
     }
 
 
-    pub fn render_vaos(&mut self) {
+    pub fn render_models(&mut self) {
         let mut cur_off_x: f32 = 0.0;
         let mut cur_off_y: f32 = 0.0;
         let mut cur_off_z: f32 = -0.4;
@@ -160,40 +159,14 @@ impl Application {
         let mut perspective_projection_matrix =
             Mat4::perspective_rh_gl(f32::to_radians(fov_val), 1024.0 / 768.0, 0.1, 100.0);
 
-        self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
+        /*
+        mesh.uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
             Uniform4FVMatrix(perspective_projection_matrix),
         ));
+        */
 
         // Initial position
         let mut camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
-
-        
-        // For now we reserve enough memory when initiating the VBO so that we can later update the VBO's memory
-        // when rendering characters:
-        let mut textVAO: gl::types::GLuint = 0;
-        let mut textVBO: gl::types::GLuint = 0;
-        unsafe {
-            gl::GenVertexArrays(1, &mut textVAO);
-            gl::GenBuffers(1, &mut textVBO);
-            gl::BindVertexArray(textVAO);
-            gl::BindBuffer(gl::ARRAY_BUFFER, textVBO);
-            gl::BufferData(gl::ARRAY_BUFFER,
-                (std::mem::size_of::<f32>() * 6 * 4) as isize,
-                std::ptr::null(),
-                gl::DYNAMIC_DRAW
-            );
-            gl::EnableVertexAttribArray(0);
-            gl::VertexAttribPointer(
-                0,
-                4,
-                gl::FLOAT,
-                gl::FALSE,
-                (4 * std::mem::size_of::<f32>()) as i32,
-                0 as *const gl::types::GLvoid
-            );
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-            gl::BindVertexArray(0);
-        }
 
         while !self.window.should_close() {
             unsafe {
@@ -229,10 +202,6 @@ impl Application {
                     &mut reset_zoom,
                 );
             }
-
-            self.use_program_at_index(0);
-
-            self.vertex_descriptors[0].bind();
 
             if moving_in == true {
                 cur_off_z += 0.02;
@@ -296,6 +265,7 @@ impl Application {
                 fov_val = 45.0;
             }
 
+           
             if zoom_out == true || zoom_in == true || reset_zoom == true {
                 perspective_projection_matrix =
                     Mat4::perspective_rh_gl(f32::to_radians(fov_val), 1024.0 / 768.0, 0.1, 100.0);
@@ -303,9 +273,12 @@ impl Application {
                 #[cfg(feature = "printdebugs")]
                 println!("zoom_in/out_perspective: {:?}", perspective_projection_matrix);
 
-                self.vertex_descriptors[0].uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
-                    Uniform4FVMatrix(perspective_projection_matrix),
-                ));
+                self.models[0].use_program();
+                for mesh in self.models[0].meshes.iter_mut() {
+                    mesh.uniforms[5].update(UniformPackedParam::UniformMatrix4FV(
+                        Uniform4FVMatrix(perspective_projection_matrix),
+                    ));
+                }
             }
 
             let rotate_about_x_matrix =
@@ -317,8 +290,8 @@ impl Application {
             let translation_matrix =
                 Mat4::from_translation(Vec3::new(cur_off_x, cur_off_y, cur_off_z));
 
-            self.vertex_descriptors[0].textures[0].set_active_texture(0);
-            self.vertex_descriptors[0].textures[1].set_active_texture(1);
+            self.models[0].meshes[0].textures[0].set_active_texture(0);
+            self.models[0].meshes[0].textures[1].set_active_texture(1);
 
             if mixvalue_grow == true {
                 mixvalue += 0.02;
@@ -430,90 +403,45 @@ impl Application {
 
             let LookAt = mat_A * mat_B;
 
-            self.vertex_descriptors[0].uniforms[6].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(LookAt)
-            ));
+            self.models[0].use_program();
+            for mesh in self.models[0].meshes.iter_mut() {
+                mesh.uniforms[6].update(UniformPackedParam::UniformMatrix4FV(
+                    Uniform4FVMatrix(LookAt)
+                ));
 
-            self.vertex_descriptors[0].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(rotate_about_x_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(rotate_about_y_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(rotate_about_z_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(translation_matrix),
-            ));
-            self.vertex_descriptors[0].uniforms[4].update(UniformPackedParam::Uniform1F(
-                Uniform1FParam(mixvalue)));
-            
-            self.vertex_descriptors[0].render();
-            
-            self.use_program_at_index(1);
-            self.vertex_descriptors[1].textures[0].set_active_texture(0);
-            self.vertex_descriptors[1].bind();
+                mesh.uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                    Uniform4FVMatrix(rotate_about_x_matrix),
+                ));
+                mesh.uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                    Uniform4FVMatrix(rotate_about_y_matrix),
+                ));
+                mesh.uniforms[2].update(UniformPackedParam::UniformMatrix4FV(
+                    Uniform4FVMatrix(rotate_about_z_matrix),
+                ));
+                mesh.uniforms[3].update(UniformPackedParam::UniformMatrix4FV(
+                    Uniform4FVMatrix(translation_matrix),
+                ));
+                mesh.uniforms[4].update(UniformPackedParam::Uniform1F(
+                    Uniform1FParam(mixvalue)));
+                
+                mesh.bind_vao();
+                mesh.render();
+            }
 
-            self.vertex_descriptors[1].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(perspective_projection_matrix),
-            ));
-            self.vertex_descriptors[1].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(LookAt)
-            ));
+            for model in self.models[1..].iter_mut() {
+                model.use_program();
+                for mesh in model.meshes.iter_mut() {
+                    mesh.bind_vao();
+                    mesh.textures[0].set_active_texture(0);
+                    mesh.uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
+                        Uniform4FVMatrix(perspective_projection_matrix),
+                    ));
 
-            self.vertex_descriptors[1].render();
-
-            self.text_manager.as_mut().unwrap().render_text("Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
-
-            self.use_program_at_index(1);
-            self.vertex_descriptors[2].textures[0].set_active_texture(0);
-            self.vertex_descriptors[2].bind();
-
-            self.vertex_descriptors[2].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(perspective_projection_matrix),
-            ));
-            self.vertex_descriptors[2].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(LookAt)
-            ));
-
-            self.vertex_descriptors[2].render();
-
-            self.vertex_descriptors[3].textures[0].set_active_texture(0);
-            self.vertex_descriptors[3].bind();
-
-            self.vertex_descriptors[3].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(perspective_projection_matrix),
-            ));
-            self.vertex_descriptors[3].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(LookAt)
-            ));
-
-            self.vertex_descriptors[3].render();
-
-            self.vertex_descriptors[4].textures[0].set_active_texture(0);
-            self.vertex_descriptors[4].bind();
-
-            self.vertex_descriptors[4].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(perspective_projection_matrix),
-            ));
-            self.vertex_descriptors[4].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(LookAt)
-            ));
-
-            self.vertex_descriptors[4].render();
-
-            self.vertex_descriptors[5].textures[0].set_active_texture(0);
-            self.vertex_descriptors[5].bind();
-
-            self.vertex_descriptors[5].uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(perspective_projection_matrix),
-            ));
-            self.vertex_descriptors[5].uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
-                Uniform4FVMatrix(LookAt)
-            ));
-
-            self.vertex_descriptors[5].render();
+                    mesh.uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
+                        Uniform4FVMatrix(LookAt)
+                    ));
+                }
+            }
 
             self.window.swap_buffers();
             self.glfw.poll_events();

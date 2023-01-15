@@ -44,6 +44,12 @@ impl Model {
             }
         }
     }
+
+    pub fn use_program(&self) {
+        unsafe {
+            gl::UseProgram(self.program.as_ref().unwrap().id);
+        }
+    }
 }
 
 // Represents a basic shape a model is made of
@@ -76,6 +82,10 @@ impl Mesh {
         }
     }
 
+    pub fn bind_vao(&self) {
+        self.vao.bind();
+    }
+
     pub fn add_uniform(&mut self, uniform: UniformDescriptor) {
         self.uniforms.push(uniform);
     }
@@ -83,13 +93,24 @@ impl Mesh {
     pub fn add_texture(&mut self, texture: TextureDescriptor) {
         self.textures.push(texture);
     }
+
+    pub fn render(&self) {
+        unsafe {
+            gl::DrawElements(
+                gl::TRIANGLES,
+                self.ebo.num_ebo_elements as i32,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
+            );
+        }
+    }
 }
 
 pub struct Texture;
 
 pub struct VertexDescriptor {
     buffer: BufferDescriptor,
-    vao_id: gl::types::GLuint,
+    pub vao_id: gl::types::GLuint,
     ebo_id: gl::types::GLuint,
     format: gl::types::GLenum,
     pub uniforms: Vec<UniformDescriptor>,

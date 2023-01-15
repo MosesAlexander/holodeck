@@ -68,15 +68,13 @@ impl TextManager {
             gl::BindVertexArray(0);
         }
 
-
-
         TextManager { program: program,
                       text_uniform: text_uniform,
                       characters: HashMap::new(),
                       text_projection_uniform: text_proj_uniform,
                       text_projection: text_projection,
-                      text_vao,
-                      text_vbo}
+                      text_vao: text_vao,
+                      text_vbo: text_vbo}
     }
 
     pub fn init(&mut self) {
