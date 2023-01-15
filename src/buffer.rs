@@ -3,6 +3,7 @@ use std::rc::Rc;
 use crate::gl;
 use crate::vertex::*;
 
+
 pub struct BufferDescriptor {
     buffer_id: gl::types::GLuint,
 }
@@ -14,6 +15,7 @@ impl BufferDescriptor {
         unsafe {
             gl::GenBuffers(1, &mut buffer_id);
         }
+
         let buffer = BufferDescriptor {
             buffer_id: buffer_id,
         };
@@ -83,12 +85,10 @@ impl VaoDescriptor {
             gl::GenVertexArrays(1, &mut vao_id);
         }
 
-        let vao = VaoDescriptor { vao_id: vao_id, buffer_ref: buffer_ref, ebo: None};
         buffer_ref.bind();
+        let mut vao = VaoDescriptor { vao_id: vao_id, buffer_ref: buffer_ref, ebo: None};
         vao.bind();
         vao.set_attributes(attr);
-
-
         vao
     }
 
@@ -97,8 +97,6 @@ impl VaoDescriptor {
             gl::BindVertexArray(self.vao_id);
         }
     }
-
-
 
     pub fn set_attributes(&mut self, attributes: AttributesDescriptor) -> Result<(), String> {
         self.bind();
