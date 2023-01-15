@@ -1,5 +1,8 @@
+use std::rc::Rc;
+
 use crate::buffer::*;
 use crate::gl;
+use crate::program::Program;
 use crate::texture::TextureDescriptor;
 use crate::uniform::UniformDescriptor;
 use glam::*;
@@ -8,59 +11,81 @@ use glam::*;
 // that it consists of
 pub struct Model {
     pub meshes: Vec<Mesh>,
+    pub program: Option<Program>,
 }
 
 // Models can be made up of multiple meshes
 impl Model {
     pub fn new() -> Model {
-        Model { meshes: Vec::new() }
+        Model { meshes: Vec::new(), program: None }
     }
 
     pub fn add_mesh(&mut self, mesh: Mesh) {
         self.meshes.push(mesh);
     }
 
-    pub fn import_mesh_from_file() {
+    pub fn parse_mesh_from_file() {
 
+    }
+
+    pub fn attach_program(&mut self, program: Program) {
+        self.program = Some(program);
+    }
+
+    pub fn render(&self) {
+        for mesh in self.meshes.iter() {
+            unsafe {
+                gl::DrawElements(
+                    gl::TRIANGLES,
+                    mesh.ebo.num_ebo_elements as i32,
+                    gl::UNSIGNED_INT,
+                    std::ptr::null(),
+                );
+            }
+        }
     }
 }
 
 // Represents a basic shape a model is made of
 pub struct Mesh {
     pub vertices: Vec<f32>,
-    pub face_indices: Vec<i32>,
-    pub textures: Vec<Texture>,
+    pub face_indices: Rc<Vec<u32>>,
+    pub textures: Vec<TextureDescriptor>,
     pub uniforms: Vec<UniformDescriptor>,
-    buffer: BufferDescriptor,
+    buffer: Rc<BufferDescriptor>,
     vao: VaoDescriptor,
-    ebo: gl::types::GLuint,
+    ebo: Rc<EboDescriptor>,
 }
 
 impl Mesh {
-    pub fn new(vertices: Vec<f32>, indices: Vec<i32>, attributes: AttributesDescriptor) -> Mesh {
-        let buffer = BufferDescriptor::new(&vertices);
-        let vao = VaoDescriptor::new(attributes);
+    pub fn new(vertices: Vec<f32>, indices: Vec<u32>, attributes: AttributesDescriptor) -> Mesh {
+        let indices_ref = Rc::new(indices);
+        let buffer = Rc::new(BufferDescriptor::new(&vertices));
+        let mut vao = VaoDescriptor::new(attributes, Rc::clone(&buffer));
+        let ebo = Rc::new(EboDescriptor::new(Rc::clone(&indices_ref)));
+        vao.attach_ebo(Rc::clone(&ebo));
 
         Mesh {
             buffer: buffer,
             vertices: vertices,
-            face_indices: indices,
+            face_indices: indices_ref,
             textures: Vec::new(),
             uniforms: Vec::new(),
             vao: vao,
-            ebo: 0, 
+            ebo: ebo,
         }
     }
 
+    pub fn add_uniform(&mut self, uniform: UniformDescriptor) {
+        self.uniforms.push(uniform);
+    }
+
+    pub fn add_texture(&mut self, texture: TextureDescriptor) {
+        self.textures.push(texture);
+    }
 }
 
 pub struct Texture;
-
-pub struct Vertex {
-    position: (f32, f32, f32),
-    normal: (f32, f32, f32),
-    texture_coords: (f32, f32),
-}
 
 pub struct VertexDescriptor {
     buffer: BufferDescriptor,

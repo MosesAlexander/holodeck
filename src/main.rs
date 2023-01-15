@@ -15,7 +15,7 @@ use program::Program;
 use shader::Shader;
 use texture::TextureDescriptor;
 use uniform::*;
-use vertex::{AttributesDescriptor, VertexDescriptor};
+use vertex::{AttributesDescriptor, VertexDescriptor, Mesh, Model};
 use quad::*;
 
 mod gl {
@@ -60,8 +60,6 @@ fn main() {
     app.add_program(&program_cube);
 
     let cube = Cube::new(0.1, (0.0, 0.0, 0.0));
-    let buffer2 = BufferDescriptor::new(&cube.vertices);
-    let mut cube_vert_desc = VertexDescriptor::new(buffer2);
     let cube_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
@@ -69,7 +67,7 @@ fn main() {
         component_offsets: vec![0, 3],
         component_strides: vec![5, 5],
     };
-    cube_vert_desc.set_attributes(cube_attr);
+    let mut cube_mesh = Mesh::new(cube.vertices, cube.indices, cube_attr);
 
     let texture1_desc =
         TextureDescriptor::new(program_cube.id, "texture1", "src/stallman.jpg", gl::RGB);
@@ -89,19 +87,20 @@ fn main() {
 
     let camera_uniform = UniformDescriptor::new(program_cube.id, "look_at");
 
-    cube_vert_desc.add_uniform(rotate_about_x_uniform);
-    cube_vert_desc.add_uniform(rotate_about_y_uniform);
-    cube_vert_desc.add_uniform(rotate_about_z_uniform);
-    cube_vert_desc.add_uniform(translate_uniform);
-    cube_vert_desc.add_uniform(mixvalue_uniform);
-    cube_vert_desc.add_uniform(projection_uniform);
-    cube_vert_desc.add_uniform(camera_uniform);
+    cube_mesh.add_uniform(rotate_about_x_uniform);
+    cube_mesh.add_uniform(rotate_about_y_uniform);
+    cube_mesh.add_uniform(rotate_about_z_uniform);
+    cube_mesh.add_uniform(translate_uniform);
+    cube_mesh.add_uniform(mixvalue_uniform);
+    cube_mesh.add_uniform(projection_uniform);
+    cube_mesh.add_uniform(camera_uniform);
 
-    cube_vert_desc.add_texture(texture1_desc);
-    cube_vert_desc.add_texture(texture2_desc);
-    cube_vert_desc.set_indexed_drawing(cube.indices);
+    cube_mesh.add_texture(texture1_desc);
+    cube_mesh.add_texture(texture2_desc);
 
-    app.add_vertex_descriptor(cube_vert_desc);
+    let mut cube_model = Model::new();
+    cube_model.add_mesh(cube_mesh);
+    cube_model.attach_program(program_cube);
 
     let mut vert_shader_floor = Shader::new("src/floor.vert", VERTEX_SHADER);
     let mut frag_shader_floor = Shader::new("src/floor.frag", FRAGMENT_SHADER);
@@ -136,10 +135,7 @@ fn main() {
 
     app.add_program(&program_floor);
 
-
     let floor = Quad::new(10.0, 0.0, (0.0, 0.000001, 0.0), (0.0,0.0,0.0), (10.0, 10.0));
-    let floor_buffer = BufferDescriptor::new(&floor.vertices);
-    let mut floor_vert_desc = VertexDescriptor::new(floor_buffer);
     let floor_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
@@ -147,7 +143,7 @@ fn main() {
         component_offsets: vec![0, 3],
         component_strides: vec![5, 5],
     };
-    floor_vert_desc.set_attributes(floor_attr);
+    let mut floor_mesh = Mesh::new(floor.vertices, floor.indices, floor_attr);
 
     let floor_texture_desc =
         TextureDescriptor::new(program_floor.id, "texture1", "src/concrete_floor.jpg", gl::RGB);
@@ -155,14 +151,16 @@ fn main() {
     let projection_uniform = UniformDescriptor::new(program_floor.id, "projection");
     let camera_uniform = UniformDescriptor::new(program_floor.id, "look_at");
 
-    floor_vert_desc.add_uniform(projection_uniform);
-    floor_vert_desc.add_uniform(camera_uniform);
+    floor_mesh.add_uniform(projection_uniform);
+    floor_mesh.add_uniform(camera_uniform);
 
-    floor_vert_desc.add_texture(floor_texture_desc);
+    floor_mesh.add_texture(floor_texture_desc);
 
-    floor_vert_desc.set_indexed_drawing(floor.indices);
+    let mut floor_model = Model::new();
+    floor_model.add_mesh(floor_mesh);
+    floor_model.attach_program(program_floor);
 
-    app.add_vertex_descriptor(floor_vert_desc);
+    app.add_model(floor_model);
 
     let mut vert_shader_text = Shader::new("src/text.vert", VERTEX_SHADER);
     let mut frag_shader_text = Shader::new("src/text.frag", FRAGMENT_SHADER);

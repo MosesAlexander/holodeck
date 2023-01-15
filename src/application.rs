@@ -11,7 +11,7 @@ use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
 use std::sync::mpsc::Receiver;
 
 use crate::gl::{self, ARRAY_BUFFER};
-use crate::vertex::VertexDescriptor;
+use crate::vertex::{VertexDescriptor, Model};
 use crate::Program;
 use std::ffi::{CString, c_void};
 use std::collections::HashMap;
@@ -32,6 +32,7 @@ pub struct Application {
     program_ids: Vec<gl::types::GLuint>,
     vaos: Vec<gl::types::GLuint>,
     textures: Vec<gl::types::GLuint>,
+    models: Vec<Model>,
     glfw: Glfw,
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
@@ -84,6 +85,7 @@ impl Application {
 
         Application {
             program_ids: Vec::new(),
+            models: Vec::new(),
             vaos: Vec::new(),
             textures: Vec::new(),
             glfw: glfw,
@@ -690,6 +692,10 @@ impl Application {
 
     pub fn add_vertex_descriptor(&mut self, descriptor: VertexDescriptor) {
         self.vertex_descriptors.push(descriptor);
+    }
+
+    pub fn add_model(&mut self, model: Model) {
+        self.models.push(model);
     }
 }
 
