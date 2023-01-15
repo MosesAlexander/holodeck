@@ -149,8 +149,8 @@ impl VertexDescriptor {
             num_elements: 0,
         };
 
-        //vertex_descriptor.buffer.bind();
-        //vertex_descriptor.bind();
+        vertex_descriptor.buffer.bind();
+        vertex_descriptor.bind();
         vertex_descriptor
     }
 

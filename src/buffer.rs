@@ -83,7 +83,13 @@ impl VaoDescriptor {
             gl::GenVertexArrays(1, &mut vao_id);
         }
 
-        VaoDescriptor { vao_id: vao_id, buffer_ref: buffer_ref, ebo: None}
+        let vao = VaoDescriptor { vao_id: vao_id, buffer_ref: buffer_ref, ebo: None};
+        buffer_ref.bind();
+        vao.bind();
+        vao.set_attributes(attr);
+
+
+        vao
     }
 
     pub fn bind(&self) {

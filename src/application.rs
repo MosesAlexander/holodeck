@@ -401,11 +401,10 @@ impl Application {
 
             let LookAt = mat_A * mat_B;
 
+            // Cube mesh
             self.models[0].use_program();
             for mesh in self.models[0].meshes.iter_mut() {
-                mesh.uniforms[6].update(UniformPackedParam::UniformMatrix4FV(
-                    Uniform4FVMatrix(LookAt)
-                ));
+
 
                 mesh.uniforms[0].update(UniformPackedParam::UniformMatrix4FV(
                     Uniform4FVMatrix(rotate_about_x_matrix),
@@ -421,10 +420,15 @@ impl Application {
                 ));
                 mesh.uniforms[4].update(UniformPackedParam::Uniform1F(
                     Uniform1FParam(mixvalue)));
+
+                mesh.uniforms[6].update(UniformPackedParam::UniformMatrix4FV(
+                    Uniform4FVMatrix(LookAt)
+                ));
                 
                 mesh.bind_vao();
+                mesh.render();
             }
-            self.models[0].render();
+            //self.models[0].render();
 
             for model in self.models[1..].iter_mut() {
                 model.use_program();

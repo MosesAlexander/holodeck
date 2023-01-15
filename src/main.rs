@@ -12,13 +12,12 @@ pub mod text;
 use std::rc::Rc;
 
 use application::{Application, FRAGMENT_SHADER, VERTEX_SHADER};
-use buffer::BufferDescriptor;
 use cube::*;
 use program::Program;
 use shader::Shader;
 use texture::TextureDescriptor;
 use uniform::*;
-use vertex::{AttributesDescriptor, VertexDescriptor, Mesh, Model};
+use vertex::{AttributesDescriptor, Mesh, Model};
 use quad::*;
 use text::TextManager;
 
