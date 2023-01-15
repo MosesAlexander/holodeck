@@ -9,6 +9,8 @@ pub mod vertex;
 pub mod quad;
 pub mod text;
 
+use std::rc::Rc;
+
 use application::{Application, FRAGMENT_SHADER, VERTEX_SHADER};
 use buffer::BufferDescriptor;
 use cube::*;
@@ -59,8 +61,6 @@ fn main() {
         }
     }
 
-    app.add_program(&program_cube);
-
     let cube = Cube::new(0.1, (0.0, 0.0, 0.0));
     let cube_attr = AttributesDescriptor {
         component_groups: 2,
@@ -102,7 +102,7 @@ fn main() {
 
     let mut cube_model = Model::new();
     cube_model.add_mesh(cube_mesh);
-    cube_model.attach_program(program_cube);
+    cube_model.attach_program(Rc::new(program_cube));
 
     let mut vert_shader_floor = Shader::new("src/floor.vert", VERTEX_SHADER);
     let mut frag_shader_floor = Shader::new("src/floor.frag", FRAGMENT_SHADER);
@@ -135,8 +135,6 @@ fn main() {
         }
     }
 
-    app.add_program(&program_floor);
-
     let floor = Quad::new(10.0, 0.0, (0.0, 0.000001, 0.0), (0.0,0.0,0.0), (10.0, 10.0));
     let floor_attr = AttributesDescriptor {
         component_groups: 2,
@@ -161,8 +159,9 @@ fn main() {
     let mut floor_model = Model::new();
     floor_model.add_mesh(floor_mesh);
 
-    let program_wall1 = program_floor.clone();
-    floor_model.attach_program(program_floor);
+    let program_floor_ref = Rc::new(program_floor);
+    let program_wall1 = Rc::clone(&program_floor_ref);
+    floor_model.attach_program(Rc::clone(&program_floor_ref));
 
     app.add_model(floor_model);
 

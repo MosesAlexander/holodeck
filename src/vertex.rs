@@ -11,7 +11,7 @@ use glam::*;
 // that it consists of
 pub struct Model {
     pub meshes: Vec<Mesh>,
-    pub program: Option<Program>,
+    pub program: Option<Rc<Program>>,
 }
 
 // Models can be made up of multiple meshes
@@ -28,7 +28,7 @@ impl Model {
 
     }
 
-    pub fn attach_program(&mut self, program: Program) {
+    pub fn attach_program(&mut self, program: Rc<Program>) {
         self.program = Some(program);
     }
 
