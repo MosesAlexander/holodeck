@@ -423,8 +423,8 @@ impl Application {
                     Uniform1FParam(mixvalue)));
                 
                 mesh.bind_vao();
-                mesh.render();
             }
+            self.models[0].render();
 
             for model in self.models[1..].iter_mut() {
                 model.use_program();
@@ -438,8 +438,13 @@ impl Application {
                     mesh.uniforms[1].update(UniformPackedParam::UniformMatrix4FV(
                         Uniform4FVMatrix(LookAt)
                     ));
+
                 }
+                model.render();
             }
+
+            self.text_manager.as_ref().unwrap().use_text_program();
+            self.text_manager.as_mut().unwrap().render_text("Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
 
             self.window.swap_buffers();
             self.glfw.poll_events();

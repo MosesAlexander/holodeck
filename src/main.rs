@@ -200,8 +200,9 @@ fn main() {
         }
     }
 
-    let text_manager = TextManager::new(program_text);
+    let mut text_manager = TextManager::new(program_text);
 
+    text_manager.init();
     app.attach_text_manager(text_manager);
 
     let wall1 = Quad::new(2.5, 0.6, (0.0, 0.0, 2.5), (0.0,0.0,2.5), (2.0, 1.0));
