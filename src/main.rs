@@ -160,6 +160,8 @@ fn main() {
 
     let mut floor_model = Model::new();
     floor_model.add_mesh(floor_mesh);
+
+    let program_wall1 = program_floor.clone();
     floor_model.attach_program(program_floor);
 
     app.add_model(floor_model);
@@ -200,8 +202,6 @@ fn main() {
     app.attach_text_manager(text_manager);
 
     let wall1 = Quad::new(2.5, 0.6, (0.0, 0.0, 2.5), (0.0,0.0,2.5), (2.0, 1.0));
-    let wall1_buffer = BufferDescriptor::new(&wall1.vertices);
-    let mut wall1_vert_desc = VertexDescriptor::new(wall1_buffer);
     let wall1_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
@@ -209,26 +209,28 @@ fn main() {
         component_offsets: vec![0, 3],
         component_strides: vec![5, 5],
     };
-    wall1_vert_desc.set_attributes(wall1_attr);
+    let mut wall1_mesh = Mesh::new(wall1.vertices, wall1.indices, wall1_attr);
 
     let wall1_texture_desc =
-        TextureDescriptor::new(program_floor.id, "texture1", "src/brick_wall.jpg", gl::RGB);
+        TextureDescriptor::new(program_wall1.id, "texture1", "src/brick_wall.jpg", gl::RGB);
     
-    let projection_uniform = UniformDescriptor::new(program_floor.id, "projection");
-    let camera_uniform = UniformDescriptor::new(program_floor.id, "look_at");
+    let projection_uniform = UniformDescriptor::new(program_wall1.id, "projection");
+    let camera_uniform = UniformDescriptor::new(program_wall1.id, "look_at");
 
-    wall1_vert_desc.add_uniform(projection_uniform);
-    wall1_vert_desc.add_uniform(camera_uniform);
+    wall1_mesh.add_uniform(projection_uniform);
+    wall1_mesh.add_uniform(camera_uniform);
 
-    wall1_vert_desc.add_texture(wall1_texture_desc);
+    wall1_mesh.add_texture(wall1_texture_desc);
 
-    wall1_vert_desc.set_indexed_drawing(wall1.indices);
+    let mut wall1_model = Model::new();
+    wall1_model.add_mesh(wall1_mesh);
+    let program_wall2 = program_wall1.clone();
+    wall1_model.attach_program(program_wall1);
 
-    app.add_vertex_descriptor(wall1_vert_desc);
+    app.add_model(wall1_model);
+
 
     let wall2 = Quad::new(2.5, 0.6, (0.0, 0.0, -2.5), (0.0,0.0,-2.5), (2.0, 1.0));
-    let wall2_buffer = BufferDescriptor::new(&wall2.vertices);
-    let mut wall2_vert_desc = VertexDescriptor::new(wall2_buffer);
     let wall2_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
@@ -236,26 +238,27 @@ fn main() {
         component_offsets: vec![0, 3],
         component_strides: vec![5, 5],
     };
-    wall2_vert_desc.set_attributes(wall2_attr);
+    let mut wall2_mesh = Mesh::new(wall2.vertices, wall2.indices, wall2_attr);
 
     let wall2_texture_desc =
-        TextureDescriptor::new(program_floor.id, "texture1", "src/brick_wall.jpg", gl::RGB);
+        TextureDescriptor::new(program_wall2.id, "texture1", "src/brick_wall.jpg", gl::RGB);
     
-    let projection_uniform = UniformDescriptor::new(program_floor.id, "projection");
-    let camera_uniform = UniformDescriptor::new(program_floor.id, "look_at");
+    let projection_uniform = UniformDescriptor::new(program_wall2.id, "projection");
+    let camera_uniform = UniformDescriptor::new(program_wall2.id, "look_at");
 
-    wall2_vert_desc.add_uniform(projection_uniform);
-    wall2_vert_desc.add_uniform(camera_uniform);
+    wall2_mesh.add_uniform(projection_uniform);
+    wall2_mesh.add_uniform(camera_uniform);
 
-    wall2_vert_desc.add_texture(wall2_texture_desc);
+    wall2_mesh.add_texture(wall2_texture_desc);
 
-    wall2_vert_desc.set_indexed_drawing(wall2.indices);
+    let mut wall2_model = Model::new();
+    wall2_model.add_mesh(wall2_mesh);
+    let program_wall3 = program_wall2.clone();
+    wall2_model.attach_program(program_wall2);
 
-    app.add_vertex_descriptor(wall2_vert_desc);
+    app.add_model(wall2_model);
 
     let wall3 = Quad::new(5.0, 0.6, (1.25, 0.0, 0.0), (1.25,0.0,0.0), (2.0, 1.0));
-    let wall3_buffer = BufferDescriptor::new(&wall3.vertices);
-    let mut wall3_vert_desc = VertexDescriptor::new(wall3_buffer);
     let wall3_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
@@ -263,26 +266,28 @@ fn main() {
         component_offsets: vec![0, 3],
         component_strides: vec![5, 5],
     };
-    wall3_vert_desc.set_attributes(wall3_attr);
+    let mut wall3_mesh = Mesh::new(wall3.vertices, wall3.indices, wall3_attr);
 
     let wall3_texture_desc =
-        TextureDescriptor::new(program_floor.id, "texture1", "src/brick_wall.jpg", gl::RGB);
+        TextureDescriptor::new(program_wall3.id, "texture1", "src/brick_wall.jpg", gl::RGB);
     
-    let projection_uniform = UniformDescriptor::new(program_floor.id, "projection");
-    let camera_uniform = UniformDescriptor::new(program_floor.id, "look_at");
+    let projection_uniform = UniformDescriptor::new(program_wall3.id, "projection");
+    let camera_uniform = UniformDescriptor::new(program_wall3.id, "look_at");
 
-    wall3_vert_desc.add_uniform(projection_uniform);
-    wall3_vert_desc.add_uniform(camera_uniform);
+    wall3_mesh.add_uniform(projection_uniform);
+    wall3_mesh.add_uniform(camera_uniform);
 
-    wall3_vert_desc.add_texture(wall3_texture_desc);
+    wall3_mesh.add_texture(wall3_texture_desc);
 
-    wall3_vert_desc.set_indexed_drawing(wall3.indices);
+    let mut wall3_model = Model::new();
+    wall3_model.add_mesh(wall3_mesh);
+    let program_wall4 = program_wall3.clone();
+    wall3_model.attach_program(program_wall3);
 
-    app.add_vertex_descriptor(wall3_vert_desc);
+    app.add_model(wall3_model);
+
 
     let wall4 = Quad::new(5.0, 0.6, (-1.25, 0.0, 0.0), (-1.25,0.0,0.0), (2.0,1.0));
-    let wall4_buffer = BufferDescriptor::new(&wall4.vertices);
-    let mut wall4_vert_desc = VertexDescriptor::new(wall4_buffer);
     let wall4_attr = AttributesDescriptor {
         component_groups: 2,
         component_nums: vec![3, 2],
@@ -290,22 +295,25 @@ fn main() {
         component_offsets: vec![0, 3],
         component_strides: vec![5, 5],
     };
-    wall4_vert_desc.set_attributes(wall4_attr);
+
+    let mut wall4_mesh = Mesh::new(wall4.vertices, wall4.indices, wall4_attr);
 
     let wall4_texture_desc =
-        TextureDescriptor::new(program_floor.id, "texture1", "src/brick_wall.jpg", gl::RGB);
+        TextureDescriptor::new(program_wall4.id, "texture1", "src/brick_wall.jpg", gl::RGB);
     
-    let projection_uniform = UniformDescriptor::new(program_floor.id, "projection");
-    let camera_uniform = UniformDescriptor::new(program_floor.id, "look_at");
+    let projection_uniform = UniformDescriptor::new(program_wall4.id, "projection");
+    let camera_uniform = UniformDescriptor::new(program_wall4.id, "look_at");
 
-    wall4_vert_desc.add_uniform(projection_uniform);
-    wall4_vert_desc.add_uniform(camera_uniform);
+    wall4_mesh.add_uniform(projection_uniform);
+    wall4_mesh.add_uniform(camera_uniform);
 
-    wall4_vert_desc.add_texture(wall4_texture_desc);
+    wall4_mesh.add_texture(wall4_texture_desc);
 
-    wall4_vert_desc.set_indexed_drawing(wall4.indices);
+    let mut wall4_model = Model::new();
+    wall4_model.add_mesh(wall4_mesh);
+    wall4_model.attach_program(program_wall4);
 
-    app.add_vertex_descriptor(wall4_vert_desc);
+    app.add_model(wall4_model);
 
 
     app.render_vaos();

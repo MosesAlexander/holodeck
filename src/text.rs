@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::ffi::{CString, c_void};
 
-use freetype::freetype::{FT_Done_FreeType, FT_Library, FT_Face, FT_Init_FreeType, FT_New_Face, FT_Set_Pixel_Sizes, FT_LOAD_RENDER, FT_Load_Char};
-use glam::{Mat4, IVec2};
+use freetype::freetype::{FT_Done_FreeType, FT_Library, FT_Face, FT_Init_FreeType, FT_New_Face, FT_Set_Pixel_Sizes, FT_LOAD_RENDER, FT_Load_Char, FT_Done_Face};
+use glam::{Mat4, IVec2, Vec3};
 use crate::gl::types::{GLint, GLuint};
 use crate::gl::{self, ARRAY_BUFFER};
 
@@ -15,6 +15,8 @@ pub struct TextManager {
     text_projection_uniform: UniformDescriptor,
     text_projection: Mat4,
     characters: HashMap<char, Character>,
+    text_vao: gl::types::GLuint,
+    text_vbo: gl::types::GLuint,
 }
 
 pub struct Character {
@@ -25,7 +27,7 @@ pub struct Character {
 }
 
 impl TextManager {
-    pub fn new(program: Program, text_uniform: UniformDescriptor) -> TextManager {
+    pub fn new(program: Program) -> TextManager {
         let mut text_uniform = UniformDescriptor::new(
             program.id,
             "textColor"
@@ -38,8 +40,43 @@ impl TextManager {
             "projection"
         );
 
+        let mut text_vbo = 0;
+        let mut text_vao = 0;
 
-        TextManager { program: program, text_uniform: text_uniform, characters: HashMap::new(), text_projection_uniform: text_proj_uniform}
+        // For now we reserve enough memory when initiating the VBO so that we can later update the VBO's memory
+        // when rendering characters:
+        unsafe {
+            gl::GenVertexArrays(1, &mut text_vao);
+            gl::GenBuffers(1, &mut text_vbo);
+            gl::BindVertexArray(text_vao);
+            gl::BindBuffer(gl::ARRAY_BUFFER, text_vbo);
+            gl::BufferData(gl::ARRAY_BUFFER,
+                (std::mem::size_of::<f32>() * 6 * 4) as isize,
+                std::ptr::null(),
+                gl::DYNAMIC_DRAW
+            );
+            gl::EnableVertexAttribArray(0);
+            gl::VertexAttribPointer(
+                0,
+                4,
+                gl::FLOAT,
+                gl::FALSE,
+                (4 * std::mem::size_of::<f32>()) as i32,
+                0 as *const gl::types::GLvoid
+            );
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+            gl::BindVertexArray(0);
+        }
+
+
+
+        TextManager { program: program,
+                      text_uniform: text_uniform,
+                      characters: HashMap::new(),
+                      text_projection_uniform: text_proj_uniform,
+                      text_projection: text_projection,
+                      text_vao,
+                      text_vbo}
     }
 
     pub fn init(&mut self) {
@@ -138,11 +175,11 @@ impl TextManager {
 
         self.use_text_program();
 
-        text_proj_uniform.update(UniformPackedParam::UniformMatrix4FV(
-            Uniform4FVMatrix(text_projection),
+        self.text_projection_uniform.update(UniformPackedParam::UniformMatrix4FV(
+            Uniform4FVMatrix(self.text_projection),
         ));
 
-        self.use_text_program(program_index);
+        
     }
 
     pub fn use_text_program(&self) {
@@ -151,9 +188,7 @@ impl TextManager {
         }
     }
 
-    pub fn render_text(self: &Self, program_index: usize, textVAO: gl::types::GLuint, textVBO: gl::types::GLuint, text: String, mut x: f32, mut y: f32, scale: f32, color: Vec3) {
-        // Activate the text shader program
-
+    pub fn render_text(&mut self, text: String, mut x: f32, mut y: f32, scale: f32, color: Vec3) {
         self.text_uniform.update(
             UniformPackedParam::Uniform3F(
                     Uniform3FParam(color.x, color.y, color.z)
@@ -161,7 +196,7 @@ impl TextManager {
         );
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindVertexArray(textVAO);
+            gl::BindVertexArray(self.text_vao);
         }
 
         for c in text.chars() {
@@ -186,7 +221,7 @@ impl TextManager {
                 // render glyph texture over quad
                 gl::BindTexture(gl::TEXTURE_2D, ch.TextureID);
                 // Update the content of the VBO memory
-                gl::BindBuffer(gl::ARRAY_BUFFER, textVBO);
+                gl::BindBuffer(gl::ARRAY_BUFFER, self.text_vbo);
                 gl::BufferSubData(gl::ARRAY_BUFFER,
                     0,
                     (vertices.len() * std::mem::size_of::<f32>()) as isize,

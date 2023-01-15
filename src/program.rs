@@ -4,6 +4,7 @@ use std::ffi::CString;
 
 use crate::gl;
 
+#[derive(Clone)]
 pub struct Program {
     pub id: gl::types::GLuint,
     shader_ids: Vec<gl::types::GLuint>,

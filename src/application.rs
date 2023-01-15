@@ -464,7 +464,7 @@ impl Application {
 
             self.vertex_descriptors[1].render();
 
-            self.text_manager.unwrap().render_text(2, textVAO, textVBO, "Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
+            self.text_manager.as_mut().unwrap().render_text("Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
 
             self.use_program_at_index(1);
             self.vertex_descriptors[2].textures[0].set_active_texture(0);
