@@ -1,6 +1,6 @@
 extern crate glfw;
 
-use crate::gl::types::{GLint, GLuint};
+use crate::text::TextManager;
 use crate::uniform::*;
 
 use glam::*;
@@ -10,14 +10,12 @@ use glfw::{Action, Context, Glfw, Key, Window, WindowEvent};
 
 use std::sync::mpsc::Receiver;
 
-use crate::gl::{self, ARRAY_BUFFER};
+use crate::gl::{self};
 use crate::vertex::{VertexDescriptor, Model};
 use crate::Program;
 use std::ffi::{CString, c_void};
-use std::collections::HashMap;
 
 extern crate freetype;
-use freetype::freetype::{FT_Library, FT_Init_FreeType, FT_Face, FT_New_Face, FT_Set_Pixel_Sizes, FT_Load_Char, FT_LOAD_RENDER, FT_Done_Face, FT_Done_FreeType};
 
 extern "C" fn framebuffer_size_callback(_window: *mut GLFWwindow, width: i32, height: i32) {
     unsafe {
@@ -37,14 +35,7 @@ pub struct Application {
     window: Window,
     events: Receiver<(f64, WindowEvent)>,
     vertex_descriptors: Vec<VertexDescriptor>,
-    characters: HashMap<char, Character>,
-}
-
-pub struct Character {
-    TextureID: u32,
-    Size: IVec2,
-    Bearing: IVec2,
-    Advance: u32,
+    text_manager: Option<TextManager>,
 }
 
 impl Application {
@@ -92,12 +83,16 @@ impl Application {
             window: window,
             events: events,
             vertex_descriptors: Vec::new(),
-            characters: HashMap::new(),
+            text_manager: None,
         }
     }
 
     pub fn add_program(&mut self, program: &Program) {
         self.program_ids.push(program.id);
+    }
+
+    pub fn attach_text_manager(&mut self, text_manager: TextManager) {
+        self.text_manager = Some(text_manager);
     }
 
     pub fn use_program_at_index(&self, idx: usize) {
@@ -106,64 +101,6 @@ impl Application {
         }
     }
 
-    pub fn render_text(self: &Self, program_index: usize, textVAO: gl::types::GLuint, textVBO: gl::types::GLuint, text: String, mut x: f32, mut y: f32, scale: f32, color: Vec3) {
-        // Activate the text shader program
-        self.use_program_at_index(program_index);
-        let mut text_uniform = UniformDescriptor::new(
-            self.program_ids[program_index],
-            "textColor"
-        );
-        text_uniform.update(
-            UniformPackedParam::Uniform3F(
-                    Uniform3FParam(color.x, color.y, color.z)
-            )
-        );
-        unsafe {
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindVertexArray(textVAO);
-        }
-
-        for c in text.chars() {
-            let ch = self.characters.get(&c).unwrap();
-
-            let xpos = x + ch.Bearing.x as f32 * scale;
-            let ypos = y - (ch.Size.y - ch.Bearing.y) as f32 * scale;
-
-            let w = ch.Size.x as f32 * scale;
-            let h = ch.Size.y as f32 * scale;
-            // Update VBO for each character
-            let mut vertices: Vec<f32> = Vec::with_capacity(6 * 4);
-            vertices.extend_from_slice(&[xpos,     ypos + h, 0.0, 0.0]);
-            vertices.extend_from_slice(&[xpos,     ypos,     0.0, 1.0]);
-            vertices.extend_from_slice(&[xpos + w, ypos,     1.0, 1.0]);
-
-            vertices.extend_from_slice(&[xpos,     ypos + h, 0.0, 0.0]);
-            vertices.extend_from_slice(&[xpos + w, ypos,     1.0, 1.0]);
-            vertices.extend_from_slice(&[xpos + w, ypos + h, 1.0, 0.0]);
-
-            unsafe {
-                // render glyph texture over quad
-                gl::BindTexture(gl::TEXTURE_2D, ch.TextureID);
-                // Update the content of the VBO memory
-                gl::BindBuffer(gl::ARRAY_BUFFER, textVBO);
-                gl::BufferSubData(gl::ARRAY_BUFFER,
-                    0,
-                    (vertices.len() * std::mem::size_of::<f32>()) as isize,
-                    vertices.as_ptr() as *const c_void
-                );
-                gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-                // render quad
-                gl::DrawArrays(gl::TRIANGLES, 0, 6);
-                // now advance cursors for next glyph(note that advance is number of 1/64 pixels)
-                x += (ch.Advance >> 6) as f32 * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
-            }
-        }
-
-        unsafe {
-            gl::BindVertexArray(0);
-            gl::BindTexture(gl::TEXTURE_2D, 0);
-        }
-    }
 
     pub fn render_vaos(&mut self) {
         let mut cur_off_x: f32 = 0.0;
@@ -218,7 +155,6 @@ impl Application {
             glfwSetInputMode(self.window.window_ptr(), CURSOR, CURSOR_DISABLED);
         }
 
-
         self.use_program_at_index(0);
 
         let mut perspective_projection_matrix =
@@ -231,112 +167,7 @@ impl Application {
         // Initial position
         let mut camera_position = Vec3::new(camera_cur_off_x, camera_cur_off_y, camera_cur_off_z);
 
-
-        let mut ft: FT_Library = std::ptr::null_mut();
-        let mut face: FT_Face = std::ptr::null_mut();
-
-        unsafe {
-            let mut ret = FT_Init_FreeType(&mut ft as *mut FT_Library);
-            if ret != 0 {
-                eprintln!("ERROR_FREETYPE: Failed initializing FreeType library!");
-                std::process::exit(1);
-            }
-
-            {
-                let font_path = CString::new("res/Hack-Regular.ttf").unwrap(); 
-                ret = FT_New_Face(ft,
-                    font_path.as_ptr(),
-                    0,
-                    &mut face as *mut FT_Face
-                );
-                if ret != 0 {
-                    eprintln!("ERROR::FREETYPE: Failed to load font");
-                    std::process::exit(1);
-                }
-            }
-
-            ret = FT_Set_Pixel_Sizes(face, 0, 48);
-            if ret != 0 {
-                eprintln!("ERROR::FREETYPE: Error setting font size");
-                std::process::exit(1);
-            }
-        }
-
-        // disable byte alignment restriction
-        unsafe {
-            gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1);
-        }
-
-        unsafe {
-            let mut ret;
-
-            for c in 0..128u8 {
-                ret = FT_Load_Char(face, c as u64, FT_LOAD_RENDER as i32);
-                if ret != 0 {
-                    eprintln!("ERROR::FREETYPE: Error loading character");
-                    std::process::exit(1);
-                }
-
-                let mut texture: GLuint = 0;
-                gl::GenTextures(1, &mut texture as *mut u32);
-                gl::BindTexture(gl::TEXTURE_2D, texture);
-                gl::TexImage2D(
-                    gl::TEXTURE_2D,
-                    0,
-                    gl::RED as i32,
-                    (*(*face).glyph).bitmap.width as i32,
-                   (*(*face).glyph).bitmap.rows as i32,
-                    0,
-                    gl::RED,
-                    gl::UNSIGNED_BYTE,
-                    (*(*face).glyph).bitmap.buffer as *const c_void
-                );
-
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-
-                let character = Character {
-                    TextureID: texture,
-                    Size: IVec2::new((*(*face).glyph).bitmap.width as i32, (*(*face).glyph).bitmap.rows as i32),
-                    Bearing: IVec2::new((*(*face).glyph).bitmap_left,  (*(*face).glyph).bitmap_top),
-                    Advance: (*(*face).glyph).advance.x as u32
-                };
-
-                self.characters.insert(c as char, character);
-            }
-
-            ret = FT_Done_Face(face);
-            if ret != 0 {
-                eprintln!("ERROR::FREETYPE: Error freeing Face resources");
-                std::process::exit(1);
-            }
-            ret = FT_Done_FreeType(ft);
-            if ret != 0 {
-                eprintln!("ERROR::FREETYPE: Error freeing FreeType resources");
-                std::process::exit(1);
-            }
-        }
-
-        unsafe {
-            gl::Enable(gl::BLEND);
-            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        }
-
-        let text_projection: Mat4 = Mat4::orthographic_rh_gl(0.0, 1024.0, 0.0, 768.0, -1.0, 1.0);
-
-        let mut text_proj_uniform = UniformDescriptor::new(
-            self.program_ids[2],
-            "projection"
-        );
-
-        self.use_program_at_index(2);
-
-        text_proj_uniform.update(UniformPackedParam::UniformMatrix4FV(
-            Uniform4FVMatrix(text_projection),
-        ));
-
+        
         // For now we reserve enough memory when initiating the VBO so that we can later update the VBO's memory
         // when rendering characters:
         let mut textVAO: gl::types::GLuint = 0;
@@ -496,7 +327,6 @@ impl Application {
                 mixvalue -= 0.02;
             }
 
-
             unsafe {
                 glfwGetCursorPos(self.window.window_ptr(), &mut current_cursor_x as *mut f64, &mut current_cursor_y as *mut f64);
             }
@@ -634,7 +464,7 @@ impl Application {
 
             self.vertex_descriptors[1].render();
 
-            self.render_text(2, textVAO, textVBO, "Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
+            self.text_manager.unwrap().render_text(2, textVAO, textVBO, "Greetings mortals".to_string(), 25.0, 25.0, 1.0, Vec3::new(0.5, 0.8, 0.2));
 
             self.use_program_at_index(1);
             self.vertex_descriptors[2].textures[0].set_active_texture(0);

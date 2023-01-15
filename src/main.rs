@@ -7,6 +7,7 @@ pub mod texture;
 pub mod uniform;
 pub mod vertex;
 pub mod quad;
+pub mod text;
 
 use application::{Application, FRAGMENT_SHADER, VERTEX_SHADER};
 use buffer::BufferDescriptor;
@@ -17,6 +18,7 @@ use texture::TextureDescriptor;
 use uniform::*;
 use vertex::{AttributesDescriptor, VertexDescriptor, Mesh, Model};
 use quad::*;
+use text::TextManager;
 
 mod gl {
     include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -193,7 +195,9 @@ fn main() {
         }
     }
 
-    app.add_program(&program_text);
+    let text_manager = TextManager::new(program_text);
+
+    app.attach_text_manager(text_manager);
 
     let wall1 = Quad::new(2.5, 0.6, (0.0, 0.0, 2.5), (0.0,0.0,2.5), (2.0, 1.0));
     let wall1_buffer = BufferDescriptor::new(&wall1.vertices);
