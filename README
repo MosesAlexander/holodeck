@@ -1,0 +1,7 @@
+At some point I got into the mood to write an OpenGL game in Rust.
+
+I pretty much lost patience at the point that I had to import 3D assets using a C++
+library. Since you have to use C wrappers and FFI to make Rust work with C++.
+
+Anyway this project is pretty shitty but maybe someone can use it as a quick reference
+if they want to do something similar in Rust.
