@@ -10,4 +10,6 @@ To run just do:
 
 $ cargo run
 
-You can move around with WASD and make the cube rotate about XYZ axis
+You can move around with WASD, move the cube with the arrow keys,
+and make the cube rotate about XYZ axis, you can search for the key bindings
+in the code and change them as you like.
